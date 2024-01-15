@@ -1,4 +1,5 @@
 :root {
+  --accent-white: #fff4db;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -13,17 +14,8 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
-  background-color: yellow;
+  background-color: rgb(255, 190, 10);
   margin: 0;
   display: flex;
   place-items: center;
@@ -32,39 +24,57 @@ body {
 }
 
 h1 {
+  text-align: center;
+  width: 100%;
+  margin: 0;
   font-size: 3.2em;
-  color: #1a1a1a;
+  color: var(--accent-white);
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+#content{
+  flex-direction: row;
+  flex-wrap: wrap;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+#modal{
+  display: flex;
+  border-radius: 2rem;
+  background-color: #1d202d;
+  width: 45rem;
+  height: 70vh;
+  box-shadow: 1rem 1rem var(--accent-white);
+}
+input{
+  height: 7rem;
+  width: 75%;
+  padding: 0;
+  margin: 0;
+}
+
+input.submit {
+  color: antiquewhite;
+  border-radius: 3rem; 
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  /* padding: 0.6em 1.2em; */
+  font-size: 5em;
+  font-weight: bolder;
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #e92727;
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
+input.submit:hover {
   border-color: #646cff;
 }
-button:focus,
-button:focus-visible {
+input.submit:focus,
+input.submit:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
