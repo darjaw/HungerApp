@@ -1,3 +1,5 @@
+/* button font */
+@import url('https://fonts.googleapis.com/css2?family=Rethink+Sans:ital,wght@1,700&display=swap');
 :root {
   --accent-white: #fff4db;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -37,50 +39,53 @@ h1 {
   margin: 0 auto;
   padding: 2rem;
 }
-#modal{
+#modal {
   display: flex;
   border-radius: 2rem;
   background-color: #1d202d;
-  width: 50vw;
-  height: 70vh;
+  width: 35vw;
+  height: 45vh;
   box-shadow: 1rem 1rem var(--accent-white);
 }
-#content{
+#content {
   flex-direction: row;
   flex-wrap: wrap;
   display: flex;
   width: 100%;
   justify-content: center;
 }
-form{
+form {
   display: flex;
   flex-wrap: wrap;
   width: 100%;
   justify-content: center;
   align-content: flex-start;
 }
-input#address{
+input#address {
   width: 50%;
   padding: 0;
   height: 4rem;
 }
+input#address::placeholder {
+  text-align: center;
+}
 input.submit {
   margin-top: 10%;
-  width: 75%;
+  width: 50%;
   height: 6rem;
   color: antiquewhite;
-  border-radius: 3rem; 
+  border-radius: 3rem;
   border: 1px solid transparent;
   /* padding: 0.6em 1.2em; */
-  font-size: 5em;
+  font-size: 3em;
   font-weight: bolder;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Rethink Sans', sans-serif;
   background-color: #e92727;
   cursor: pointer;
   transition: border-color 0.25s;
 }
 input.submit:hover {
-  border-color: #646cff;
+  border-color: var(--accent-white);
 }
 input.submit:focus,
 input.submit:focus-visible {
