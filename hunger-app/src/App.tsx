@@ -1,4 +1,4 @@
-import {ChangeEvent, SyntheticEvent, useState, KeyboardEvent, FormEvent} from 'react'
+import {ChangeEvent, useState, FormEvent} from 'react'
 
 function App() {
   const [count, setCount] = useState(0)
