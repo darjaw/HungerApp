@@ -19,7 +19,7 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  min-width: 320px;
+  min-width: 100vw;
   min-height: 100vh;
 }
 
@@ -37,6 +37,14 @@ h1 {
   margin: 0 auto;
   padding: 2rem;
 }
+#modal{
+  display: flex;
+  border-radius: 2rem;
+  background-color: #1d202d;
+  width: 50vw;
+  height: 70vh;
+  box-shadow: 1rem 1rem var(--accent-white);
+}
 #content{
   flex-direction: row;
   flex-wrap: wrap;
@@ -44,22 +52,22 @@ h1 {
   width: 100%;
   justify-content: center;
 }
-#modal{
+form{
   display: flex;
-  border-radius: 2rem;
-  background-color: #1d202d;
-  width: 45rem;
-  height: 70vh;
-  box-shadow: 1rem 1rem var(--accent-white);
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: center;
+  align-content: flex-start;
 }
-input{
-  height: 7rem;
-  width: 75%;
+input#address{
+  width: 50%;
   padding: 0;
-  margin: 0;
+  height: 4rem;
 }
-
 input.submit {
+  margin-top: 10%;
+  width: 75%;
+  height: 6rem;
   color: antiquewhite;
   border-radius: 3rem; 
   border: 1px solid transparent;
@@ -77,4 +85,11 @@ input.submit:hover {
 input.submit:focus,
 input.submit:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* for mobile screens */
+@media screen and (max-width: 800px) {
+  body {
+    background-color: lightgreen;
+  }
 }

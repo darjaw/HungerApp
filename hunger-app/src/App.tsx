@@ -1,4 +1,4 @@
-import {ChangeEvent, useState} from 'react'
+import {ChangeEvent, SyntheticEvent, useState, KeyboardEvent, FormEvent} from 'react'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -9,17 +9,23 @@ function App() {
     setCount(count+1);
   }
  
-  function getData(event: ChangeEvent<HTMLInputElement>){
-    setAddress(event.target.value)
-    console.log(event.target.value)
+  function getAddress(event: ChangeEvent<HTMLInputElement>){
+    setAddress(event.currentTarget.value);
+  }
+  
+  function preventReload(event: FormEvent<HTMLFormElement>){
+    event.preventDefault();
+    console.log(address);
   }
 
   return (
     <div id='modal'>
       <div id='content'>
         <h1>Hunger</h1>
-        {/* <input type="text" id='address' placeholder="Zip or Address" onChange={getData} /> */}
-        <input type="submit" id='submitButton' value='submit' className='submit'/>
+        <form onSubmit={preventReload}>
+          <input type="text" id='address' placeholder="Zip or Address" onChange={getAddress}/>
+          <input type="submit" id='submitButton' value='submit' className='submit'/>
+        </form>
       </div>
     </div>
   )
