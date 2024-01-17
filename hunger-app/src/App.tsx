@@ -1,15 +1,24 @@
-import { ChangeEvent, useState, FormEvent } from "react";
-import fetch from "node-fetch";
+import { ChangeEvent, useState, FormEvent , useEffect} from "react";
 
 function App() {
-  const [count, setCount] = useState(0);
   const [address, setAddress] = useState("");
   const [submittedAddress, setSubmittedAddress] = useState("");
+  const [advice, setAdvice] = useState("")
 
-  let buttonClick = () => {
-    console.log("Button was clicked " + "Count is " + count);
-    setCount(count + 1);
-  };
+  //calling an api for advice (just a test)
+  useEffect(() => {
+    const fetchData = async () =>{
+      const result = await fetch("https://api.adviceslip.com/advice", {cache: "no-cache"})
+      const data = result.json().then(json => {
+        // console.log(json.slip.advice)
+        setAdvice(json.slip.advice);
+      });
+      data
+    }
+    fetchData();
+  },[])
+
+
   //updates address
   function getAddress(event: ChangeEvent<HTMLInputElement>) {
     setAddress(event.currentTarget.value);
@@ -22,19 +31,19 @@ function App() {
     setSubmittedAddress(address);
     setAddress("");
   }
+  
 
-  async function callAdvice() {
-    const response = await fetch("https://api.adviceslip.com/advice");
-    const data = await response.json;
-    //const advice = data.slip.
-    console.log(data);
-  }
+  // async function callAdvice() {
+
+  // }
+
   return (
     <div id="modal">
       <div id="content">
         <h1>Hunger</h1>
         <p>{submittedAddress}</p>
-        <form onSubmit={callAdvice}>
+        <p>{advice}</p>
+        <form onSubmit={submitAddress}>
           <input
             type="text"
             id="address"
