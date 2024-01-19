@@ -5,10 +5,13 @@ function App() {
   const [submittedAddress, setSubmittedAddress] = useState("");
   const [advice, setAdvice] = useState("")
 
+
   //calling an api for advice (just a test)
-  useEffect(() => {
-    const fetchData = async () =>{
-      const result = await fetch("https://api.adviceslip.com/advice", {cache: "no-cache"})
+  useEffect(
+    () => {
+      const fetchData = async () =>
+      { 
+      const result = await fetch("https://api.adviceslip.com/advice", )
       const data = result.json().then(json => {
         // console.log(json.slip.advice)
         setAdvice(json.slip.advice);
@@ -16,7 +19,10 @@ function App() {
       data
     }
     fetchData();
-  },[])
+  },[]);
+
+
+
 
 
   //updates address
@@ -38,13 +44,13 @@ function App() {
   // }
 
   return (
-    <div id="modal">
-      <div id="content">
-        <h1>Hunger</h1>
-        <p>{submittedAddress}</p>
-        <p>{advice}</p>
-        <form onSubmit={submitAddress}>
+      <div className='card card-compact w-1/2 center' id="content">
+        <h1 className='card-title justify-center'>Hunger</h1>
+        <p className='card-body text-center'>{submittedAddress}</p>
+        <p className='card-body text-center font-bold'>{advice}</p>
+        <form className='card-body' onSubmit={submitAddress}>
           <input
+            className='input outline'
             type="text"
             id="address"
             value={address}
@@ -55,11 +61,10 @@ function App() {
             type="submit"
             id="submitButton"
             value="submit"
-            className="submit"
-          />
+            className='btn btn-secondary' 
+           />
         </form>
       </div>
-    </div>
   );
 }
 
