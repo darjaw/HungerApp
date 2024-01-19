@@ -1,15 +1,24 @@
-import { ChangeEvent, useState, FormEvent } from "react";
-import fetch from "node-fetch";
+import { ChangeEvent, useState, FormEvent , useEffect} from "react";
 
 function App() {
-  const [count, setCount] = useState(0);
   const [address, setAddress] = useState("");
   const [submittedAddress, setSubmittedAddress] = useState("");
+  const [advice, setAdvice] = useState("")
+  //calling an api for advice (just a test)
+  useEffect(
+    () => {
+      const fetchData = async () =>
+      { 
+      const result = await fetch("https://api.adviceslip.com/advice", {cache: "no-cache"})
+      const data = result.json().then(json => {
+        // console.log(json.slip.advice)
+        setAdvice(json.slip.advice);
+      });
+      data
+    }
+    fetchData();
+  },[]);
 
-  let buttonClick = () => {
-    console.log("Button was clicked " + "Count is " + count);
-    setCount(count + 1);
-  };
   //updates address
   function getAddress(event: ChangeEvent<HTMLInputElement>) {
     setAddress(event.currentTarget.value);
@@ -22,20 +31,16 @@ function App() {
     setSubmittedAddress(address);
     setAddress("");
   }
+  
 
-  async function callAdvice() {
-    const response = await fetch("https://api.adviceslip.com/advice");
-    const data = await response.json;
-    //const advice = data.slip.
-    console.log(data);
-  }
   return (
-    <div id="modal">
-      <div id="content">
-        <h1>Hunger</h1>
-        <p>{submittedAddress}</p>
-        <form onSubmit={callAdvice}>
+      <div className='card card-compact w-1/2 center' id="content">
+        <h1 className='card-title justify-center'>Hunger</h1>
+        <p className='card-body text-center'>{submittedAddress}</p>
+        <p className='card-body text-center font-bold'>{advice}</p>
+        <form className='card-body' onSubmit={submitAddress}>
           <input
+            className='input outline'
             type="text"
             id="address"
             value={address}
@@ -46,11 +51,10 @@ function App() {
             type="submit"
             id="submitButton"
             value="submit"
-            className="submit"
-          />
+            className='btn btn-secondary' 
+           />
         </form>
       </div>
-    </div>
   );
 }
 
