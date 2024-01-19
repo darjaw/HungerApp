@@ -11,7 +11,6 @@ function App() {
       { 
       const result = await fetch("https://api.adviceslip.com/advice", {cache: "no-cache"})
       const data = result.json().then(json => {
-        // console.log(json.slip.advice)
         setAdvice(json.slip.advice);
       });
       data
@@ -33,7 +32,7 @@ function App() {
   }
 
   return (
-      <div className='card card-compact h-[75vh] max-w-screen-md my-auto w-3/5 m-auto border border-solid border-secondary' id="content">
+      <div className='card card-compact h-[75vh] mt-28 max-w-screen-md w-3/5 m-auto border border-solid border-secondary' id="content">
         <h1 className='card-title justify-center mt-10'>Hunger</h1>
         <p className='card-body text-center'>{submittedAddress}</p>
         <p className='card-body text-center font-bold'>{advice}</p>
