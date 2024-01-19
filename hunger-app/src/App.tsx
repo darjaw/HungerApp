@@ -31,21 +31,21 @@ function App() {
     setSubmittedAddress(address);
     setAddress("");
   }
-  
 
   return (
-      <div className='card card-compact w-1/2 center' id="content">
-        <h1 className='card-title justify-center'>Hunger</h1>
+      <div className='card card-compact h-[75vh] max-w-screen-md my-auto w-3/5 m-auto border border-solid border-secondary' id="content">
+        <h1 className='card-title justify-center mt-10'>Hunger</h1>
         <p className='card-body text-center'>{submittedAddress}</p>
         <p className='card-body text-center font-bold'>{advice}</p>
-        <form className='card-body' onSubmit={submitAddress}>
+        <form className='card-body mb-20 mx-12' onSubmit={submitAddress}>
           <input
-            className='input outline'
+            className='input outline my-9'
             type="text"
             id="address"
             value={address}
             placeholder="Zip or Address"
             onChange={getAddress}
+            autoComplete="off"
           />
           <input
             type="submit"
