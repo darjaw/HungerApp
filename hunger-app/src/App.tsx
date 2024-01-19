@@ -4,14 +4,12 @@ function App() {
   const [address, setAddress] = useState("");
   const [submittedAddress, setSubmittedAddress] = useState("");
   const [advice, setAdvice] = useState("")
-
-
   //calling an api for advice (just a test)
   useEffect(
     () => {
       const fetchData = async () =>
       { 
-      const result = await fetch("https://api.adviceslip.com/advice", )
+      const result = await fetch("https://api.adviceslip.com/advice", {cache: "no-cache"})
       const data = result.json().then(json => {
         // console.log(json.slip.advice)
         setAdvice(json.slip.advice);
@@ -20,10 +18,6 @@ function App() {
     }
     fetchData();
   },[]);
-
-
-
-
 
   //updates address
   function getAddress(event: ChangeEvent<HTMLInputElement>) {
@@ -38,10 +32,6 @@ function App() {
     setAddress("");
   }
   
-
-  // async function callAdvice() {
-
-  // }
 
   return (
       <div className='card card-compact w-1/2 center' id="content">
