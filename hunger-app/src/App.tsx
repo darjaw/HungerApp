@@ -78,16 +78,20 @@ function App() {
   return (
       <div className='card card-compact h-[75vh] mt-28 max-w-screen-md w-3/5 m-auto border border-solid border-secondary' id="content">
         <h1 className='card-title justify-center mt-10'>Hunger</h1>
-        <p className='card-body text-center'>{submittedAddress}</p>
+        <p className="card-body text-center">
+        Your formatted address: {fetchAddress}
+      </p>
+      <p className="card-body text-center">Your latitude: {latitude}</p>
+      <p className="card-body text-center">Your longitude: {longitude}</p>
         <p className='card-body text-center font-bold'>{advice}</p>
         <form className='card-body mx-12' onSubmit={submitAddress}>
           <input
             className='input outline my-9'
             type="text"
             id="address"
-            value={address}
+            value={submittedAddress}
             placeholder="Zip or Address"
-            onChange={getAddress}
+            onChange={updateAddress}
             autoComplete="off"
           />
           <input
