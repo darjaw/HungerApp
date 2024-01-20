@@ -1,9 +1,15 @@
-import { ChangeEvent, useState, FormEvent , useEffect} from "react";
+import { ChangeEvent, useState, FormEvent, useEffect } from "react";
 
 function App() {
-  const [address, setAddress] = useState("");
+  //const [address, setAddress] = useState("");
   const [submittedAddress, setSubmittedAddress] = useState("");
-  const [advice, setAdvice] = useState("")
+  const [fetchAddress, setFetchAddress] = useState("");
+  const [advice, setAdvice] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+
+  const apiKey = "AIzaSyABISqSmSD1EjzYxxSmWQqEMY6gENLjYdA";
+
 
   //calling an api for advice (just a test)
   useEffect(
@@ -14,8 +20,8 @@ function App() {
       const data = result.json().then(json => {
         setAdvice(json.slip.advice);
       });
-      data
-    }
+      data;
+    };
     fetchData();
   },[]);
 
@@ -38,16 +44,35 @@ function App() {
   }
 
   //updates address
-  function getAddress(event: ChangeEvent<HTMLInputElement>) {
-    setAddress(event.currentTarget.value);
+  function updateAddress(event: ChangeEvent<HTMLInputElement>) {
+    setSubmittedAddress(event.currentTarget.value);
   }
 
   //used on submission, prevents page refresh and collects current state of input onSubmit
-  function submitAddress(event: FormEvent<HTMLFormElement>) {
+  async function submitAddress(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    console.log(address);
-    setSubmittedAddress(address);
-    setAddress("");
+    console.log(submittedAddress);
+    //setSubmittedAddress(address);
+    // setAddress("");
+
+    fetch(
+      "https://addressvalidation.googleapis.com/v1:validateAddress?key=" +
+        apiKey,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: { addressLines: [submittedAddress] } }),
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data),
+          setFetchAddress(data.result.address.formattedAddress),
+          setLatitude(data.result.geocode.location.latitude),
+          setLongitude(data.result.geocode.location.longitude);
+      });
+
+    setSubmittedAddress("");
   }
 
   return (
