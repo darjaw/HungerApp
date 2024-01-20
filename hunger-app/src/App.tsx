@@ -4,6 +4,7 @@ function App() {
   const [address, setAddress] = useState("");
   const [submittedAddress, setSubmittedAddress] = useState("");
   const [advice, setAdvice] = useState("")
+
   //calling an api for advice (just a test)
   useEffect(
     () => {
@@ -17,6 +18,25 @@ function App() {
     }
     fetchData();
   },[]);
+
+  
+  //(test function) calling httpbin post test endpoint onClick of testButton, console logs json object
+  async function sendTestCall() {
+    const postURL = 'https://httpbin.org/post'
+    const requestOptions = {
+      method: 'POST',
+      headers: {'Content-Type': "application/json"},
+      body:''
+    }
+
+    fetch(postURL, requestOptions)
+      .then(response => response.json()
+      .then(data => console.log(data)))
+      .catch(error => {
+        console.warn('[ERROR] ' +postURL +' : ' + error.message)
+        setSubmittedAddress('ERROR')
+      })
+  }
 
   //updates address
   function getAddress(event: ChangeEvent<HTMLInputElement>) {
@@ -36,7 +56,7 @@ function App() {
         <h1 className='card-title justify-center mt-10'>Hunger</h1>
         <p className='card-body text-center'>{submittedAddress}</p>
         <p className='card-body text-center font-bold'>{advice}</p>
-        <form className='card-body mb-20 mx-12' onSubmit={submitAddress}>
+        <form className='card-body mx-12' onSubmit={submitAddress}>
           <input
             className='input outline my-9'
             type="text"
@@ -49,10 +69,11 @@ function App() {
           <input
             type="submit"
             id="submitButton"
-            value="submit"
-            className='btn btn-secondary' 
+            value="submit" 
+            className='btn btn-secondary'
            />
         </form>
+        <button className='btn no-animation btn-warning rounded-bl-xl rounded-br-xl rounded-tl-none rounded-tr-none border-r w-full' type='button' id='testButton' onClick={sendTestCall}>A Button for Testing</button>
       </div>
   );
 }
