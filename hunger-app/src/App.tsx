@@ -28,8 +28,7 @@ function App() {
       headers: {'Content-Type': "application/json"},
       body:''
     }
-
-    fetch(postURL, requestOptions)
+    await fetch(postURL, requestOptions)
       .then(response => response.json()
       .then(data => console.log(data)))
       .catch(error => {
@@ -73,7 +72,7 @@ function App() {
             className='btn btn-secondary'
            />
         </form>
-        <button className='btn no-animation btn-warning rounded-bl-xl rounded-br-xl rounded-tl-none rounded-tr-none border-r w-full' type='button' id='testButton' onClick={sendTestCall}>A Button for Testing</button>
+        <button className='btn no-animation btn-warning rounded-bl-xl rounded-br-xl rounded-tl-none rounded-tr-none w-full' type='button' id='testButton' onClick={sendTestCall}>A Button for Testing</button>
       </div>
   );
 }
