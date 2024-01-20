@@ -8,7 +8,7 @@ function App() {
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
 
-  const apiKey = "AIzaSyABISqSmSD1EjzYxxSmWQqEMY6gENLjYdA";
+  const apiKey = import.meta.env.VITE_MAPS_KEY;
 
 
   //calling an api for advice (just a test)
