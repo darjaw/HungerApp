@@ -1,73 +1,38 @@
-import { ChangeEvent, useState, FormEvent, useEffect } from "react";
+import { ChangeEvent, useState } from "react";
 
 function App() {
-  //const [address, setAddress] = useState("");
   const [submittedAddress, setSubmittedAddress] = useState("");
-  const [fetchAddress, setFetchAddress] = useState("");
-  const [advice, setAdvice] = useState("");
+  const [returnedFormattedAddress, setReturnedAddress] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
 
   const apiKey = import.meta.env.VITE_MAPS_KEY;
 
-
-  //calling an api for advice (just a test)
-  useEffect(
-    () => {
-      const fetchData = async () =>
-      { 
-      const result = await fetch("https://api.adviceslip.com/advice", {cache: "no-cache"})
-      const data = result.json().then(json => {
-        setAdvice(json.slip.advice);
-      });
-      data;
-    };
-    fetchData();
-  },[]);
-
-  
-  //(test function) calling httpbin post test endpoint onClick of testButton, console logs json object
-  async function sendTestCall() {
-    const postURL = 'https://httpbin.org/post'
-    const requestOptions = {
-      method: 'POST',
-      headers: {'Content-Type': "application/json"},
-      body:''
-    }
-    await fetch(postURL, requestOptions)
-      .then(response => response.json()
-      .then(data => console.log(data)))
-      .catch(error => {
-        console.warn('[ERROR] ' +postURL +' : ' + error.message)
-        setSubmittedAddress('ERROR')
-      })
-  }
-
-  //updates address
-  function updateAddress(event: ChangeEvent<HTMLInputElement>) {
+  //updates submittedAddress useState as user is typing
+  function handleInputUpdate(event: ChangeEvent<HTMLInputElement>) {
     setSubmittedAddress(event.currentTarget.value);
+    console.log(submittedAddress);
   }
 
-  //used on submission, prevents page refresh and collects current state of input onSubmit
-  async function submitAddress(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    console.log(submittedAddress);
-    //setSubmittedAddress(address);
-    // setAddress("");
-
-    fetch(
+  //used on address submission, sends current state of input onSubmit to google address validation API
+  async function handleAddressSubmission() {
+    const apiEndpoint =
       "https://addressvalidation.googleapis.com/v1:validateAddress?key=" +
-        apiKey,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: { addressLines: [submittedAddress] } }),
-      }
-    )
+      apiKey;
+    const apiRequest = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address: { addressLines: [submittedAddress] } }),
+    };
+    if (!submittedAddress.includes(",USA")) {
+      setSubmittedAddress(submittedAddress + ",USA");
+    }
+    console.log(submittedAddress);
+    fetch(apiEndpoint, apiRequest)
       .then((response) => response.json())
       .then((data) => {
         console.log(data),
-          setFetchAddress(data.result.address.formattedAddress),
+          setReturnedAddress(data.result.address.formattedAddress),
           setLatitude(data.result.geocode.location.latitude),
           setLongitude(data.result.geocode.location.longitude);
       });
@@ -76,33 +41,38 @@ function App() {
   }
 
   return (
-      <div className='card card-compact h-[75vh] mt-28 max-w-screen-md w-3/5 m-auto border border-solid border-secondary' id="content">
-        <h1 className='card-title justify-center mt-10'>Hunger</h1>
-        <p className="card-body text-center">
-        Your formatted address: {fetchAddress}
+    <div
+      className="card card-compact mt-28 max-w-screen-md w-3/5 m-auto border border-solid border-secondary"
+      id="content"
+    >
+      <h1 className="card-title rounded-tl-2xl font-bold font-rethinkSans text-[#1d202d] text-5xl p-5 rounded-tr-2xl justify-center bg-[#eca700]">
+        Hunger
+      </h1>
+      <p className="card-body text-center">
+        Your formatted address: {returnedFormattedAddress}
       </p>
       <p className="card-body text-center">Your latitude: {latitude}</p>
       <p className="card-body text-center">Your longitude: {longitude}</p>
-        <p className='card-body text-center font-bold'>{advice}</p>
-        <form className='card-body mx-12' onSubmit={submitAddress}>
-          <input
-            className='input outline my-9'
-            type="text"
-            id="address"
-            value={submittedAddress}
-            placeholder="Zip or Address"
-            onChange={updateAddress}
-            autoComplete="off"
-          />
-          <input
-            type="submit"
-            id="submitButton"
-            value="submit" 
-            className='btn btn-secondary'
-           />
-        </form>
-        <button className='btn no-animation btn-warning rounded-bl-xl rounded-br-xl rounded-tl-none rounded-tr-none w-full' type='button' id='testButton' onClick={sendTestCall}>A Button for Testing</button>
-      </div>
+      <input
+        className="card-body self-center input w-2/3 outline my-9"
+        type="text"
+        id="address"
+        value={submittedAddress}
+        placeholder="Zip or Address"
+        onChange={handleInputUpdate}
+        autoComplete="off"
+      />
+      <button
+        className="btn no-animation place-self-end bg-[#e92727] hover:bg-[#9c1a1a] active:bg-[#4f0d0d] transition-all rounded-bl-2xl rounded-br-2xl rounded-tl-none rounded-tr-none w-full"
+        type="button"
+        id="testButton"
+        onClick={() => {
+          if (submittedAddress !== "") handleAddressSubmission();
+        }}
+      >
+        Submit
+      </button>
+    </div>
   );
 }
 
