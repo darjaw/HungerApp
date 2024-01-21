@@ -1,43 +1,46 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 
 function App() {
-  const [submittedAddress, setSubmittedAddress] = useState("");
+  const [inputAddress, setInputAddress] = useState("");
   const [returnedFormattedAddress, setReturnedAddress] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [returnedLatitude, setReturnedLatitude] = useState("");
+  const [returnedLongitude, setReturnedLongitude] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const apiKey = import.meta.env.VITE_MAPS_KEY;
 
   //updates submittedAddress useState as user is typing
   function handleInputUpdate(event: ChangeEvent<HTMLInputElement>) {
-    setSubmittedAddress(event.currentTarget.value);
-    console.log(submittedAddress);
+    setInputAddress(event.currentTarget.value);
   }
 
   //used on address submission, sends current state of input onSubmit to google address validation API
   async function handleAddressSubmission() {
+    let submittedAddress = inputRef.current?.value;
+    setInputAddress("");
     const apiEndpoint =
       "https://addressvalidation.googleapis.com/v1:validateAddress?key=" +
       apiKey;
+
+    if (submittedAddress?.includes(",USA") === false) {
+      submittedAddress = submittedAddress + ", USA";
+    }
+
     const apiRequest = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ address: { addressLines: [submittedAddress] } }),
     };
-    if (!submittedAddress.includes(",USA")) {
-      setSubmittedAddress(submittedAddress + ",USA");
-    }
+
     console.log(submittedAddress);
-    fetch(apiEndpoint, apiRequest)
+    await fetch(apiEndpoint, apiRequest)
       .then((response) => response.json())
       .then((data) => {
         console.log(data),
           setReturnedAddress(data.result.address.formattedAddress),
-          setLatitude(data.result.geocode.location.latitude),
-          setLongitude(data.result.geocode.location.longitude);
+          setReturnedLatitude(data.result.geocode.location.latitude),
+          setReturnedLongitude(data.result.geocode.location.longitude);
       });
-
-    setSubmittedAddress("");
   }
 
   return (
@@ -48,16 +51,17 @@ function App() {
       <h1 className="card-title rounded-tl-2xl font-bold font-rethinkSans text-[#1d202d] text-5xl p-5 rounded-tr-2xl justify-center bg-[#eca700]">
         Hunger
       </h1>
-      <p className="card-body text-center">
+      <p className="pb-4 text-center">
         Your formatted address: {returnedFormattedAddress}
       </p>
-      <p className="card-body text-center">Your latitude: {latitude}</p>
-      <p className="card-body text-center">Your longitude: {longitude}</p>
+      <p className="p-0 text-center">Your latitude: {returnedLatitude}</p>
+      <p className="p-0 text-center">Your longitude: {returnedLongitude}</p>
       <input
-        className="card-body self-center input w-2/3 outline my-9"
+        className="self-center input w-2/3 outline my-8"
         type="text"
         id="address"
-        value={submittedAddress}
+        ref={inputRef}
+        value={inputAddress}
         placeholder="Zip or Address"
         onChange={handleInputUpdate}
         autoComplete="off"
@@ -67,7 +71,7 @@ function App() {
         type="button"
         id="testButton"
         onClick={() => {
-          if (submittedAddress !== "") handleAddressSubmission();
+          if (inputRef.current?.value !== "") handleAddressSubmission();
         }}
       >
         Submit
