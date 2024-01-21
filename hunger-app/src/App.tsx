@@ -22,7 +22,10 @@ function App() {
       "https://addressvalidation.googleapis.com/v1:validateAddress?key=" +
       apiKey;
 
-    if (submittedAddress?.includes(",USA") === false) {
+    if (
+      submittedAddress?.includes(",USA") === false ||
+      submittedAddress?.includes(", USA") === false
+    ) {
       submittedAddress = submittedAddress + ", USA";
     }
 
@@ -40,6 +43,9 @@ function App() {
           setReturnedAddress(data.result.address.formattedAddress),
           setReturnedLatitude(data.result.geocode.location.latitude),
           setReturnedLongitude(data.result.geocode.location.longitude);
+      })
+      .catch((error) => {
+        window.alert(error.message);
       });
   }
 
