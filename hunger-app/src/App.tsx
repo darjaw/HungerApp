@@ -77,7 +77,11 @@ function App() {
         type="button"
         id="testButton"
         onClick={() => {
-          if (inputRef.current?.value !== "") handleAddressSubmission();
+          if (inputRef.current?.value !== "") {
+            handleAddressSubmission();
+          } else {
+            window.alert("Empty address, could not submit request");
+          }
         }}
       >
         Submit
