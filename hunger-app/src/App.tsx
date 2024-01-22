@@ -69,7 +69,7 @@ function App() {
         5-digit ZIP Code or address
       </label>
       <input
-        className="self-center text-sm place-content-center input w-2/3 outline mb-8 max-md:mt-2 max-md:text-xs"
+        className="self-center text-sm place-content-center input w-2/3 outline mb-8 max-md:text-xs"
         type="text"
         id="address"
         ref={inputRef}
