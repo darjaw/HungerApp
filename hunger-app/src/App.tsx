@@ -62,13 +62,19 @@ function App() {
       </p>
       <p className="p-0 text-center">Your latitude: {returnedLatitude}</p>
       <p className="p-0 text-center">Your longitude: {returnedLongitude}</p>
+      <label
+        className=" self-center text-xl input mt-10 max-md:text-sm"
+        htmlFor="address"
+      >
+        5-digit ZIP Code or address
+      </label>
       <input
-        className="self-center input w-2/3 outline my-8"
+        className="self-center text-sm place-content-center input w-2/3 outline mb-8 max-md:mt-2 max-md:text-xs"
         type="text"
         id="address"
         ref={inputRef}
         value={inputAddress}
-        placeholder="Zip or Address"
+        placeholder="e.g. '21401' or '145 Broadway, Buffalo, NY 14203'"
         onChange={handleInputUpdate}
         autoComplete="off"
       />
@@ -80,7 +86,7 @@ function App() {
           if (inputRef.current?.value !== "") {
             handleAddressSubmission();
           } else {
-            window.alert("Empty address, could not submit request");
+            window.alert("Please enter a ZIP code or address");
           }
         }}
       >
