@@ -52,13 +52,13 @@ function App() {
   return (
     <main className="flex justify-center flex-wrap pt-28" id="container">
       <div
-        className="card card-compact max-w-screen-md w-3/5 flex  border border-solid border-secondary"
+        className="card card-compact max-w-screen-md w-3/5 flex border-4 border-solid border-secondary"
         id="content"
       >
-        <h1 className="card-title rounded-tl-2xl font-bold font-rethinkSans text-[#1d202d] text-5xl p-5 rounded-tr-2xl justify-center bg-[#eca700]">
+        <h1 className="card-title font-bold font-rethinkSans text-[#1d202d] text-5xl p-5 rounded-tl-xl rounded-tr-xl border-0 justify-center bg-[#eca700]">
           Hunger
         </h1>
-        <p className="pb-4 text-center">
+        <p className="pt-8 pb-2 text-center">
           Your formatted address: {returnedFormattedAddress}
         </p>
         <p className="p-0 text-center">Your latitude: {returnedLatitude}</p>
@@ -80,7 +80,7 @@ function App() {
           autoComplete="off"
         />
         <button
-          className="btn no-animation place-self-end bg-[#e92727] hover:bg-[#9c1a1a] active:bg-[#4f0d0d] transition-all rounded-bl-2xl rounded-br-2xl rounded-tl-none rounded-tr-none w-full"
+          className="btn no-animation place-self-end bg-[#e92727] hover:bg-[#9c1a1a] active:bg-[#4f0d0d] border-0 transition-all rounded-bl-xl rounded-br-xl rounded-tl-none rounded-tr-none w-full"
           type="button"
           id="testButton"
           onClick={() => {
