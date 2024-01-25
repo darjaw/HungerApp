@@ -7,7 +7,7 @@ function App() {
   const [returnedLongitude, setReturnedLongitude] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const apiKey = import.meta.env.VITE_MAPS_KEY;
+  const apiKey = import.meta.env.VITE_MAPBOX_KEY;
 
   //updates submittedAddress useState as user is typing
   function handleInputUpdate(event: ChangeEvent<HTMLInputElement>) {
@@ -16,33 +16,19 @@ function App() {
 
   //used on address submission, sends current state of input onSubmit to google address validation API
   async function handleAddressSubmission() {
-    let submittedAddress = inputRef.current?.value;
+    const submittedAddress = inputRef.current?.value;
     setInputAddress("");
-    const apiEndpoint =
-      "https://addressvalidation.googleapis.com/v1:validateAddress?key=" +
-      apiKey;
-
-    if (
-      submittedAddress?.includes(",USA") === false ||
-      submittedAddress?.includes(", USA") === false
-    ) {
-      submittedAddress = submittedAddress + ", USA";
-    }
-
-    const apiRequest = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ address: { addressLines: [submittedAddress] } }),
-    };
+    const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${apiKey}`;
 
     console.log(submittedAddress);
-    await fetch(apiEndpoint, apiRequest)
+
+    await fetch(mapBoxEndpoint)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data),
-          setReturnedAddress(data.result.address.formattedAddress),
-          setReturnedLatitude(data.result.geocode.location.latitude),
-          setReturnedLongitude(data.result.geocode.location.longitude);
+        console.log(data);
+        setReturnedAddress(data.features[0].place_name),
+          setReturnedLatitude(data.features[0].center[1]),
+          setReturnedLongitude(data.features[0].center[0]);
       })
       .catch((error) => {
         window.alert(error.message);
@@ -63,6 +49,7 @@ function App() {
         </p>
         <p className="p-0 text-center">Your latitude: {returnedLatitude}</p>
         <p className="p-0 text-center">Your longitude: {returnedLongitude}</p>
+
         <label
           className=" self-center text-xl input mt-10 max-md:text-sm"
           htmlFor="address"
