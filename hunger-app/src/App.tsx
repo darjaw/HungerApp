@@ -1,4 +1,6 @@
 import { ChangeEvent, useRef, useState } from "react";
+import Map, { Marker } from "react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 function App() {
   const [inputAddress, setInputAddress] = useState("");
@@ -6,6 +8,7 @@ function App() {
   const [returnedLatitude, setReturnedLatitude] = useState("");
   const [returnedLongitude, setReturnedLongitude] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [showMap, setShowMap] = useState(true);
 
   const apiKey = import.meta.env.VITE_MAPBOX_KEY;
 
@@ -14,14 +17,13 @@ function App() {
     setInputAddress(event.currentTarget.value);
   }
 
-  //used on address submission, sends current state of input onSubmit to google address validation API
+  //used on address submission, sends current state of input onSubmit to mapbox address validation API
   async function handleAddressSubmission() {
     const submittedAddress = inputRef.current?.value;
     setInputAddress("");
     const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${apiKey}`;
 
     console.log(submittedAddress);
-
     await fetch(mapBoxEndpoint)
       .then((response) => response.json())
       .then((data) => {
@@ -33,10 +35,14 @@ function App() {
       .catch((error) => {
         window.alert(error.message);
       });
+    console.log(showMap);
   }
 
   return (
-    <main className="flex justify-center flex-wrap pt-28" id="container">
+    <main
+      className="flex place-content-center flex-col flex-wrap pt-28"
+      id="container"
+    >
       <div
         className="card card-compact max-w-screen-md w-3/5 flex border-4 border-solid border-secondary"
         id="content"
@@ -49,7 +55,6 @@ function App() {
         </p>
         <p className="p-0 text-center">Your latitude: {returnedLatitude}</p>
         <p className="p-0 text-center">Your longitude: {returnedLongitude}</p>
-
         <label
           className=" self-center text-xl input mt-10 max-md:text-sm"
           htmlFor="address"
@@ -81,6 +86,28 @@ function App() {
           Submit
         </button>
       </div>
+      {showMap ? (
+        <Map
+          doubleClickZoom={false}
+          scrollZoom={true}
+          dragPan={true}
+          mapboxAccessToken={apiKey}
+          initialViewState={{
+            latitude: 38.897957,
+            longitude: -77.03656,
+            zoom: 18,
+          }}
+          style={{ width: "50vw", height: "50vh" }}
+          mapStyle="mapbox://styles/mapbox/streets-v9"
+        >
+          <Marker latitude={38.897957} longitude={-77.03656}>
+            <img
+              style={{ width: "11vw", height: "10vh" }}
+              src="/src/assets/pin.png"
+            />
+          </Marker>
+        </Map>
+      ) : null}
     </main>
   );
 }
