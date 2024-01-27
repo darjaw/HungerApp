@@ -1,16 +1,45 @@
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Map, { Marker } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 function App() {
   const [inputAddress, setInputAddress] = useState("");
   const [returnedFormattedAddress, setReturnedAddress] = useState("");
-  const [returnedLatitude, setReturnedLatitude] = useState("");
-  const [returnedLongitude, setReturnedLongitude] = useState("");
+  const [uiLatitude, setUiLatitude] = useState<number | null>(null);
+  const [uiLongitude, setUiLongitude] = useState<number | null>(null);
+  const [showMap, setShowMap] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [showMap, setShowMap] = useState(true);
+  const defaultLocation = { latitude: 38.8977, longitude: 77.0365 };
+  const [mapViewState, setMapViewState] = useState<ViewState | null>(null);
+  const [markerViewState, setMarkerViewState] = useState<ViewState>({
+    ...defaultLocation,
+  });
 
   const apiKey = import.meta.env.VITE_MAPBOX_KEY;
+
+  type ViewState = {
+    latitude: number;
+    longitude: number;
+  };
+
+  useEffect(() => {
+    if (mapViewState !== null) setShowMap(true);
+  }, [mapViewState]);
+
+  function updateUiState(viewStateOptions: Promise<ViewState>) {
+    viewStateOptions.then((data) => {
+      setUiLatitude(data.latitude);
+      setUiLongitude(data.longitude);
+      setMapViewState({
+        latitude: data.latitude,
+        longitude: data.longitude,
+      });
+      setMarkerViewState({
+        latitude: data.latitude,
+        longitude: data.longitude,
+      });
+    });
+  }
 
   //updates submittedAddress useState as user is typing
   function handleInputUpdate(event: ChangeEvent<HTMLInputElement>) {
@@ -18,24 +47,29 @@ function App() {
   }
 
   //used on address submission, sends current state of input onSubmit to mapbox address validation API
-  async function handleAddressSubmission() {
+  async function handleAddressSubmission(): Promise<ViewState> {
     const submittedAddress = inputRef.current?.value;
+    let returnedLatitude = 38.8977;
+    let returnedLongitude = 77.0365;
+
     setInputAddress("");
     const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${apiKey}`;
 
-    console.log(submittedAddress);
     await fetch(mapBoxEndpoint)
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
-        setReturnedAddress(data.features[0].place_name),
-          setReturnedLatitude(data.features[0].center[1]),
-          setReturnedLongitude(data.features[0].center[0]);
+        setReturnedAddress(data.features[0].place_name);
+        returnedLatitude = data.features[0].center[1];
+        returnedLongitude = data.features[0].center[0];
       })
       .catch((error) => {
         window.alert(error.message);
       });
-    console.log(showMap);
+    return {
+      latitude: returnedLatitude,
+      longitude: returnedLongitude,
+    };
   }
 
   return (
@@ -53,8 +87,8 @@ function App() {
         <p className="pt-8 pb-2 text-center">
           Your formatted address: {returnedFormattedAddress}
         </p>
-        <p className="p-0 text-center">Your latitude: {returnedLatitude}</p>
-        <p className="p-0 text-center">Your longitude: {returnedLongitude}</p>
+        <p className="p-0 text-center">Your latitude: {uiLatitude}</p>
+        <p className="p-0 text-center">Your longitude: {uiLongitude}</p>
         <label
           className=" self-center text-xl input mt-10 max-md:text-sm"
           htmlFor="address"
@@ -74,10 +108,10 @@ function App() {
         <button
           className="btn no-animation place-self-end bg-[#e92727] hover:bg-[#9c1a1a] active:bg-[#4f0d0d] border-0 transition-all rounded-bl-xl rounded-br-xl rounded-tl-none rounded-tr-none w-full"
           type="button"
-          id="testButton"
+          id="submitButton"
           onClick={() => {
             if (inputRef.current?.value !== "") {
-              handleAddressSubmission();
+              updateUiState(handleAddressSubmission());
             } else {
               window.alert("Please enter a ZIP code or address");
             }
@@ -86,23 +120,31 @@ function App() {
           Submit
         </button>
       </div>
+      <input
+        className="btn btn-primary w-1/4 h-5 border self-center"
+        type="button"
+        name=""
+        value="Open Map"
+        id="testMap"
+        onClick={(HTMLButtonElement) => {
+          HTMLButtonElement.nativeEvent.preventDefault;
+          if (showMap) {
+            setShowMap(false);
+          } else setShowMap(true);
+        }}
+      />
       {showMap ? (
         <Map
-          doubleClickZoom={false}
-          scrollZoom={true}
-          dragPan={true}
+          {...mapViewState}
+          reuseMaps
+          zoom={16}
           mapboxAccessToken={apiKey}
-          initialViewState={{
-            latitude: 38.897957,
-            longitude: -77.03656,
-            zoom: 18,
-          }}
-          style={{ width: "50vw", height: "50vh" }}
+          style={{ width: "40%", height: "50vh" }}
           mapStyle="mapbox://styles/mapbox/streets-v9"
         >
-          <Marker latitude={38.897957} longitude={-77.03656}>
+          <Marker {...markerViewState}>
             <img
-              style={{ width: "11vw", height: "10vh" }}
+              style={{ width: "4rem", height: "4rem" }}
               src="/src/assets/pin.png"
             />
           </Marker>
