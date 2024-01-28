@@ -5,8 +5,6 @@ import "mapbox-gl/dist/mapbox-gl.css";
 function App() {
   const [inputAddress, setInputAddress] = useState("");
   const [returnedFormattedAddress, setReturnedAddress] = useState("");
-  const [uiLatitude, setUiLatitude] = useState<number | null>(null);
-  const [uiLongitude, setUiLongitude] = useState<number | null>(null);
   const [showMap, setShowMap] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const defaultLocation = { latitude: 38.8977, longitude: 77.0365 };
@@ -28,8 +26,6 @@ function App() {
 
   function updateUiState(viewStateOptions: Promise<ViewState>) {
     viewStateOptions.then((data) => {
-      setUiLatitude(data.latitude);
-      setUiLongitude(data.longitude);
       setMapViewState({
         latitude: data.latitude,
         longitude: data.longitude,
@@ -73,30 +69,32 @@ function App() {
   }
 
   return (
-    <main
-      className="flex place-content-center flex-col flex-wrap pt-28"
-      id="container"
-    >
+    <div className="grid grid-cols-[50%,50%] place-content-center">
       <div
-        className="card card-compact max-w-screen-md w-3/5 flex border-4 border-solid border-secondary"
-        id="content"
+        className="grid grid-cols-1 mt-24 gap-y-40 place-content-center"
+        id="container"
       >
-        <h1 className="card-title font-bold font-rethinkSans text-[#1d202d] text-5xl p-5 rounded-tl-xl rounded-tr-xl border-0 justify-center bg-[#eca700]">
-          Hunger
-        </h1>
-        <p className="pt-8 pb-2 text-center">
-          Your formatted address: {returnedFormattedAddress}
-        </p>
-        <p className="p-0 text-center">Your latitude: {uiLatitude}</p>
-        <p className="p-0 text-center">Your longitude: {uiLongitude}</p>
-        <label
-          className=" self-center text-xl input mt-10 max-md:text-sm"
-          htmlFor="address"
+        <div
+          className="text-center font-bungeeShade text-8xl text-[#1E1E1F] max-sm:"
+          id="title"
         >
-          5-digit ZIP Code or address
-        </label>
+          Hunger
+        </div>
+        {/* <p className="pt-8 pb-2 text-center">
+        Your formatted address: {returnedFormattedAddress}
+      </p>
+      <p className="p-0 text-center">Your latitude: {mapViewState?.latitude}</p>
+      <p className="p-0 text-center">
+        Your longitude: {mapViewState?.longitude}
+      </p> */}
+        {/* <label
+        className="text-center text-xl mt-10 max-md:text-sm col-span-full"
+        htmlFor="address"
+      >
+        5-digit ZIP Code or address
+      </label> */}
         <input
-          className="self-center text-sm place-content-center input w-2/3 outline mb-8 max-md:text-xs"
+          className="rounded-[2.5rem] w-3/4 text-center font-cousine h-40 ml-20 border bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
           type="text"
           id="address"
           ref={inputRef}
@@ -106,7 +104,7 @@ function App() {
           autoComplete="off"
         />
         <button
-          className="btn no-animation place-self-end bg-[#e92727] hover:bg-[#9c1a1a] active:bg-[#4f0d0d] border-0 transition-all rounded-bl-xl rounded-br-xl rounded-tl-none rounded-tr-none w-full"
+          className="rounded-[2.5rem] w-3/4 text-center text-6xl font-cousine h-40 ml-20 border bg-transparent ease-in-out shadow-[-10px,10px,0px,0px] border-[#1E1E1F] text-[#1E1E1F] "
           type="button"
           id="submitButton"
           onClick={() => {
@@ -117,14 +115,14 @@ function App() {
             }
           }}
         >
-          Submit
+          submit
         </button>
-      </div>
-      <input
-        className="btn btn-primary w-1/4 h-5 border self-center"
+
+        {/* <input
+        className="btn-primary w-1/4 h-5 border self-center"
         type="button"
         name=""
-        value="Open Map"
+        value={showMap ? "Hide Map" : "Show Map"}
         id="testMap"
         onClick={(HTMLButtonElement) => {
           HTMLButtonElement.nativeEvent.preventDefault;
@@ -132,14 +130,16 @@ function App() {
             setShowMap(false);
           } else setShowMap(true);
         }}
-      />
+      /> */}
+      </div>
       {showMap ? (
         <Map
           {...mapViewState}
+          id="map"
           reuseMaps
           zoom={16}
           mapboxAccessToken={apiKey}
-          style={{ width: "40%", height: "50vh" }}
+          style={{ width: "40%", height: "50vh", margin: "auto" }}
           mapStyle="mapbox://styles/mapbox/streets-v9"
         >
           <Marker {...markerViewState}>
@@ -150,7 +150,7 @@ function App() {
           </Marker>
         </Map>
       ) : null}
-    </main>
+    </div>
   );
 }
 
