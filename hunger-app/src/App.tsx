@@ -139,7 +139,7 @@ function App() {
           reuseMaps
           zoom={16}
           mapboxAccessToken={apiKey}
-          style={{ width: "40%", height: "50vh", margin: "auto" }}
+          style={{ width: "60%", height: "50%", margin: "auto" }}
           mapStyle="mapbox://styles/mapbox/streets-v9"
         >
           <Marker {...markerViewState}>
