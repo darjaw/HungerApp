@@ -1,69 +1,111 @@
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Map, { Marker } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 function App() {
   const [inputAddress, setInputAddress] = useState("");
   const [returnedFormattedAddress, setReturnedAddress] = useState("");
-  const [returnedLatitude, setReturnedLatitude] = useState("");
-  const [returnedLongitude, setReturnedLongitude] = useState("");
+  const [showMap, setShowMap] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [showMap, setShowMap] = useState(true);
+  const defaultLocation = { latitude: 38.8977, longitude: 77.0365 };
+  const [mapViewState, setMapViewState] = useState<ViewState | null>(null);
+  const [markerViewState, setMarkerViewState] = useState<ViewState>({
+    ...defaultLocation,
+  });
 
   const apiKey = import.meta.env.VITE_MAPBOX_KEY;
+
+  type ViewState = {
+    latitude: number;
+    longitude: number;
+  };
+
+  useEffect(() => {
+    if (mapViewState !== null) setShowMap(true);
+  }, [mapViewState]);
+
+  function updateUiState(viewStateOptions: Promise<ViewState>) {
+    viewStateOptions.then((data) => {
+      setMapViewState({
+        latitude: data.latitude,
+        longitude: data.longitude,
+      });
+      setMarkerViewState({
+        latitude: data.latitude,
+        longitude: data.longitude,
+      });
+    });
+  }
 
   //updates submittedAddress useState as user is typing
   function handleInputUpdate(event: ChangeEvent<HTMLInputElement>) {
     setInputAddress(event.currentTarget.value);
   }
+  //checks to see if input is empty and skips submission if so
+  function handleSubmissionValidation() {
+    if (inputRef.current?.value !== "") {
+      updateUiState(handleAddressSubmission());
+    } else {
+      window.alert("Please enter a ZIP code or address");
+    }
+  }
 
   //used on address submission, sends current state of input onSubmit to mapbox address validation API
-  async function handleAddressSubmission() {
+  async function handleAddressSubmission(): Promise<ViewState> {
     const submittedAddress = inputRef.current?.value;
+    let returnedLatitude = 38.8977;
+    let returnedLongitude = 77.0365;
+
     setInputAddress("");
     const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${apiKey}`;
 
-    console.log(submittedAddress);
     await fetch(mapBoxEndpoint)
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
-        setReturnedAddress(data.features[0].place_name),
-          setReturnedLatitude(data.features[0].center[1]),
-          setReturnedLongitude(data.features[0].center[0]);
+        setReturnedAddress(data.features[0].place_name);
+        returnedLatitude = data.features[0].center[1];
+        returnedLongitude = data.features[0].center[0];
       })
       .catch((error) => {
         window.alert(error.message);
       });
-    console.log(showMap);
+    return {
+      latitude: returnedLatitude,
+      longitude: returnedLongitude,
+    };
   }
 
   return (
-    <main
-      className="flex place-content-center flex-col flex-wrap pt-28"
-      id="container"
-    >
+    <div className="grid grid-cols-[65%,35%]">
       <div
-        className="card card-compact max-w-screen-md w-3/5 flex border-4 border-solid border-secondary"
-        id="content"
+        className="grid grid-cols-1 grid-rows-3 place-items-center"
+        id="container"
       >
-        <h1 className="card-title font-bold font-rethinkSans text-[#1d202d] text-5xl p-5 rounded-tl-xl rounded-tr-xl border-0 justify-center bg-[#eca700]">
-          Hunger
-        </h1>
-        <p className="pt-8 pb-2 text-center">
-          Your formatted address: {returnedFormattedAddress}
-        </p>
-        <p className="p-0 text-center">Your latitude: {returnedLatitude}</p>
-        <p className="p-0 text-center">Your longitude: {returnedLongitude}</p>
-        <label
-          className=" self-center text-xl input mt-10 max-md:text-sm"
-          htmlFor="address"
+        <div
+          className="select-none font-bungeeShade text-8xl text-[#1E1E1F]"
+          id="title"
         >
+          Hunger
+        </div>
+        {/* <p className="pt-8 pb-2 text-center">
+        Your formatted address: {returnedFormattedAddress}
+      </p>
+      <p className="p-0 text-center">Your latitude: {mapViewState?.latitude}</p>
+      <p className="p-0 text-center">
+        Your longitude: {mapViewState?.longitude}
+      </p> */}
+        {/* <label className="" htmlFor="address">
           5-digit ZIP Code or address
-        </label>
+        </label> */}
         <input
-          className="self-center text-sm place-content-center input w-2/3 outline mb-8 max-md:text-xs"
+          className="rounded-[2.5rem] w-2/3 text-center text-6xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
           type="text"
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              handleSubmissionValidation();
+            }
+          }}
           id="address"
           ref={inputRef}
           value={inputAddress}
@@ -72,43 +114,56 @@ function App() {
           autoComplete="off"
         />
         <button
-          className="btn no-animation place-self-end bg-[#e92727] hover:bg-[#9c1a1a] active:bg-[#4f0d0d] border-0 transition-all rounded-bl-xl rounded-br-xl rounded-tl-none rounded-tr-none w-full"
+          className="rounded-[2.5rem] w-2/3 text-center text-6xl font-cousine h-40 border bg-transparent duration-500 ease-out shadow-[-10px,10px,0px,0px] border-[#1E1E1F] text-[#1E1E1F] "
           type="button"
-          id="testButton"
-          onClick={() => {
-            if (inputRef.current?.value !== "") {
-              handleAddressSubmission();
-            } else {
-              window.alert("Please enter a ZIP code or address");
-            }
-          }}
+          id="submitButton"
+          onClick={handleSubmissionValidation}
         >
-          Submit
+          submit
         </button>
-      </div>
-      {showMap ? (
-        <Map
-          doubleClickZoom={false}
-          scrollZoom={true}
-          dragPan={true}
-          mapboxAccessToken={apiKey}
-          initialViewState={{
-            latitude: 38.897957,
-            longitude: -77.03656,
-            zoom: 18,
+
+        {/* <input
+          className="btn-primary w-1/4 h-5 border self-center"
+          type="button"
+          name=""
+          value={showMap ? "Hide Map" : "Show Map"}
+          id="testMap"
+          onClick={(HTMLButtonElement) => {
+            HTMLButtonElement.nativeEvent.preventDefault;
+            if (showMap) {
+              setShowMap(false);
+            } else setShowMap(true);
           }}
-          style={{ width: "50vw", height: "50vh" }}
-          mapStyle="mapbox://styles/mapbox/streets-v9"
-        >
-          <Marker latitude={38.897957} longitude={-77.03656}>
-            <img
-              style={{ width: "11vw", height: "10vh" }}
-              src="/src/assets/pin.png"
-            />
-          </Marker>
-        </Map>
-      ) : null}
-    </main>
+        /> */}
+      </div>
+      <div className="grid grid-cols-1 grid-rows-1 place-items-center w-full h-[100dvh] border-dashed border-l border-[#1E1E1F]">
+        {showMap ? (
+          <Map
+            {...mapViewState}
+            id="map"
+            reuseMaps
+            zoom={15}
+            mapboxAccessToken={apiKey}
+            style={{
+              width: "70%",
+              height: "50%",
+              margin: "auto",
+              borderWidth: "1px",
+              borderColor: "#1E1E1F",
+              borderRadius: "2rem",
+            }}
+            mapStyle="mapbox://styles/mapbox/streets-v9"
+          >
+            <Marker {...markerViewState}>
+              <img
+                style={{ width: "4rem", height: "4rem" }}
+                src="/src/assets/pin.png"
+              />
+            </Marker>
+          </Map>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
