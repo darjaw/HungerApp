@@ -12,8 +12,11 @@ function App() {
   const [markerViewState, setMarkerViewState] = useState<ViewState>({
     ...defaultLocation,
   });
+  const [placeID, setPlaceID] = useState("");
+  const [placeName, setPlaceName] = useState("");
 
-  const apiKey = import.meta.env.VITE_MAPBOX_KEY;
+  const mapboxApiKey = import.meta.env.VITE_MAPBOX_KEY;
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
   type ViewState = {
     latitude: number;
@@ -44,7 +47,7 @@ function App() {
   //checks to see if input is empty and skips submission if so
   function handleSubmissionValidation() {
     if (inputRef.current?.value !== "") {
-      updateUiState(handleAddressSubmission());
+      updateUiState(findRestaurant());
     } else {
       window.alert("Please enter a ZIP code or address");
     }
@@ -57,7 +60,7 @@ function App() {
     let returnedLongitude = 77.0365;
 
     setInputAddress("");
-    const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${apiKey}`;
+    const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${mapboxApiKey}`;
 
     await fetch(mapBoxEndpoint)
       .then((response) => response.json())
@@ -73,6 +76,60 @@ function App() {
     return {
       latitude: returnedLatitude,
       longitude: returnedLongitude,
+    };
+  }
+
+  async function findRestaurant(): Promise<ViewState> {
+    const addressCenter: Promise<ViewState> = handleAddressSubmission();
+    let addressLatitude: number = 0;
+    let addressLongitude: number = 0;
+    let restaurantLatitude = 0;
+    let restaurantLongitude = 0;
+    await addressCenter.then((data) => {
+      addressLatitude = data.latitude;
+      addressLongitude = data.longitude;
+    });
+    const googleMapsEndpoint = `https://places.googleapis.com/v1/places:searchNearby`;
+    const searchRequest = {
+      method: "POST",
+      cahce: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": googleMapsApiKey,
+        "X-Goog-FieldMask":
+          "places.id,places.displayName,places.formattedAddress",
+      },
+      body: JSON.stringify({
+        includedTypes: ["restaurant"],
+        maxResultCount: 20,
+        rankPreference: "DISTANCE",
+        locationRestriction: {
+          circle: {
+            center: {
+              latitude: addressLatitude,
+              longitude: addressLongitude,
+            },
+            radius: 35000.0,
+          },
+        },
+      }),
+    };
+
+    await fetch(googleMapsEndpoint, searchRequest)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        setPlaceID(data.places[0].id);
+        setPlaceName(data.places[0].displayName.text);
+        setReturnedAddress(data.places[0].formattedAddress);
+      })
+      .catch((error) => {
+        window.alert(error.message);
+      });
+
+    return {
+      latitude: restaurantLatitude,
+      longitude: restaurantLongitude,
     };
   }
 
@@ -138,29 +195,43 @@ function App() {
       </div>
       <div className="grid grid-cols-1 grid-rows-1 place-items-center w-full h-[100dvh] border-dashed border-l border-[#1E1E1F]">
         {showMap ? (
-          <Map
-            {...mapViewState}
-            id="map"
-            reuseMaps
-            zoom={15}
-            mapboxAccessToken={apiKey}
-            style={{
-              width: "70%",
-              height: "50%",
-              margin: "auto",
-              borderWidth: "1px",
-              borderColor: "#1E1E1F",
-              borderRadius: "2rem",
-            }}
-            mapStyle="mapbox://styles/mapbox/streets-v9"
-          >
-            <Marker {...markerViewState}>
-              <img
-                style={{ width: "4rem", height: "4rem" }}
-                src="/src/assets/pin.png"
-              />
-            </Marker>
-          </Map>
+          <>
+            {/* <Map
+              {...mapViewState}
+              id="map"
+              reuseMaps
+              zoom={15}
+              mapboxAccessToken={apiKey}
+              style={{
+                width: "70%",
+                height: "50%",
+                margin: "auto",
+                borderWidth: "1px",
+                borderColor: "#1E1E1F",
+                borderRadius: "2rem",
+              }}
+              mapStyle="mapbox://styles/mapbox/streets-v9"
+            >
+              <Marker {...markerViewState}>
+                <img
+                  style={{ width: "4rem", height: "4rem" }}
+                  src="/src/assets/pin.png"
+                />
+              </Marker>
+            </Map> */}
+            <iframe
+              width="70%"
+              height="50%"
+              style={{ border: "1px" }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src={`https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}
+              &q=place_id:${placeID}`}
+            ></iframe>
+            <p>Your recommended eatery is {placeName}.</p>
+            <p>Address: {returnedFormattedAddress}</p>
+          </>
         ) : null}
       </div>
     </div>
