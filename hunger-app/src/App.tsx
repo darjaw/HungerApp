@@ -16,6 +16,7 @@ function App() {
     longitude?: number;
     placeId?: string;
     placeName?: string;
+    rating?: number;
   };
 
   useEffect(() => {
@@ -91,7 +92,7 @@ function App() {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": googleMapsApiKey,
         "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress",
+          "places.id,places.displayName,places.formattedAddress,places.rating,places.googleMapsUri",
       },
       body: JSON.stringify({
         includedTypes: ["restaurant"],
@@ -112,10 +113,11 @@ function App() {
     await fetch(placesEndpoint, searchRequest)
       .then((response) => response.json())
       .then((data) => {
+        const placeItem = Math.floor(Math.random() * data.places.length);
         console.log(data);
-        returnedPlaceId = data.places[0].id;
-        returnedPlaceName = data.places[0].displayName.text;
-        setReturnedAddress(data.places[0].formattedAddress);
+        returnedPlaceId = data.places[placeItem].id;
+        returnedPlaceName = data.places[placeItem].displayName.text;
+        setReturnedAddress(data.places[placeItem].formattedAddress);
       })
       .catch((error) => {
         window.alert(error.message);
@@ -128,19 +130,19 @@ function App() {
   }
 
   return (
-    <div className="grid grid-cols-[65%,35%]">
+    <div className="grid grid-cols-[60%,40%]">
       <div
         className="grid grid-cols-1 grid-rows-3 place-items-center"
         id="container"
       >
         <div
-          className="select-none font-bungeeShade text-8xl text-[#1E1E1F]"
+          className="select-none font-bungeeShade text-9xl text-[#1E1E1F]"
           id="title"
         >
           Hunger
         </div>
         <input
-          className="rounded-[2.5rem] w-2/3 text-center text-6xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
+          className="rounded-[2.5rem] w-2/3 text-center text-5xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
           type="text"
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -155,7 +157,7 @@ function App() {
           autoComplete="off"
         />
         <button
-          className="rounded-[2.5rem] w-2/3 text-center text-6xl font-cousine h-40 border bg-transparent duration-500 ease-out shadow-[-10px,10px,0px,0px] border-[#1E1E1F] text-[#1E1E1F] "
+          className="rounded-[2.5rem] w-1/3 text-center text-6xl font-cousine h-40 border bg-transparent duration-500 ease-out shadow-[-10px,10px,0px,0px] border-[#1E1E1F] text-[#1E1E1F] "
           type="button"
           id="submitButton"
           onClick={handleSubmissionValidation}
@@ -163,22 +165,25 @@ function App() {
           submit
         </button>
       </div>
-      <div className="grid grid-cols-1 grid-rows-1 place-items-center w-full h-[100dvh] border-dashed border-l border-[#1E1E1F]">
+      <div className="grid grid-cols-1 grid-rows-1 w-full h-[100dvh] border-dashed border-l border-[#1E1E1F]">
         {mapVisible ? (
-          <>
+          <div className="grid grid-rows-[70%,30%] h-full w-full place-items-center">
             <iframe
-              width="70%"
-              height="50%"
-              style={{ border: "1px" }}
+              className="mt-auto w-[70%] h-[80%] rounded-xl border-2 border-[#1E1E1F] row-span"
+              id="map-embed"
               loading="lazy"
               allowFullScreen
               referrerPolicy="no-referrer-when-downgrade"
               src={`https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}
               &q=place_id:${placeID}`}
-            ></iframe>
-            <p>Your recommended eatery is {placeName}.</p>
-            <p>Address: {returnedFormattedAddress}</p>
-          </>
+            />
+            <div className="pt-10 mb-auto">
+              <div className="font-cousine text-center text-4xl">
+                {placeName}
+              </div>
+              <div className="font-cousine">{returnedFormattedAddress}</div>
+            </div>
+          </div>
         ) : null}
       </div>
     </div>
