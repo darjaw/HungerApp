@@ -1,40 +1,36 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import Map, { Marker } from "react-map-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
 
 function App() {
   const [inputAddress, setInputAddress] = useState("");
   const [returnedFormattedAddress, setReturnedAddress] = useState("");
-  const [showMap, setShowMap] = useState(false);
+  const [mapVisible, setMapVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const defaultLocation = { latitude: 38.8977, longitude: 77.0365 };
-  const [mapViewState, setMapViewState] = useState<ViewState | null>(null);
-  const [markerViewState, setMarkerViewState] = useState<ViewState>({
-    ...defaultLocation,
-  });
+  const [placeID, setPlaceID] = useState<string | null>(null);
+  const [placeName, setPlaceName] = useState<string | null>(null);
 
-  const apiKey = import.meta.env.VITE_MAPBOX_KEY;
+  const mapboxApiKey = import.meta.env.VITE_MAPBOX_KEY;
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
-  type ViewState = {
-    latitude: number;
-    longitude: number;
+  type Place = {
+    latitude?: number;
+    longitude?: number;
+    placeId?: string;
+    placeName?: string;
   };
 
   useEffect(() => {
-    if (mapViewState !== null) setShowMap(true);
-  }, [mapViewState]);
+    if (placeID !== null) setMapVisible(true);
+  }, [placeID]);
 
-  function updateUiState(viewStateOptions: Promise<ViewState>) {
-    viewStateOptions.then((data) => {
-      setMapViewState({
-        latitude: data.latitude,
-        longitude: data.longitude,
-      });
-      setMarkerViewState({
-        latitude: data.latitude,
-        longitude: data.longitude,
-      });
+  async function updateUiState(viewStateOptions: Promise<Place>) {
+    let restaurantPlaceId: string | undefined = "";
+    let restaurantPlaceName: string | undefined = "";
+    await viewStateOptions.then((data) => {
+      restaurantPlaceId = data.placeId;
+      restaurantPlaceName = data.placeName;
     });
+    setPlaceID(restaurantPlaceId);
+    setPlaceName(restaurantPlaceName);
   }
 
   //updates submittedAddress useState as user is typing
@@ -44,20 +40,20 @@ function App() {
   //checks to see if input is empty and skips submission if so
   function handleSubmissionValidation() {
     if (inputRef.current?.value !== "") {
-      updateUiState(handleAddressSubmission());
+      updateUiState(searchPlaceEndpoint());
     } else {
       window.alert("Please enter a ZIP code or address");
     }
   }
 
   //used on address submission, sends current state of input onSubmit to mapbox address validation API
-  async function handleAddressSubmission(): Promise<ViewState> {
+  async function handleAddressSubmission(): Promise<Place> {
     const submittedAddress = inputRef.current?.value;
-    let returnedLatitude = 38.8977;
-    let returnedLongitude = 77.0365;
+    let returnedLatitude = 0;
+    let returnedLongitude = 0;
 
     setInputAddress("");
-    const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${apiKey}`;
+    const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${mapboxApiKey}`;
 
     await fetch(mapBoxEndpoint)
       .then((response) => response.json())
@@ -76,6 +72,61 @@ function App() {
     };
   }
 
+  //used to query placeS
+  async function searchPlaceEndpoint(): Promise<Place> {
+    const addressCenter: Promise<Place> = handleAddressSubmission();
+    let addressLatitude: number | undefined = 0;
+    let addressLongitude: number | undefined = 0;
+    let returnedPlaceId = "";
+    let returnedPlaceName = "";
+    await addressCenter.then((data) => {
+      addressLatitude = data.latitude;
+      addressLongitude = data.longitude;
+    });
+    const placesEndpoint = `https://places.googleapis.com/v1/places:searchNearby`;
+    const searchRequest: RequestInit = {
+      method: "POST",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": googleMapsApiKey,
+        "X-Goog-FieldMask":
+          "places.id,places.displayName,places.formattedAddress",
+      },
+      body: JSON.stringify({
+        includedTypes: ["restaurant"],
+        maxResultCount: 20,
+        rankPreference: "DISTANCE",
+        locationRestriction: {
+          circle: {
+            center: {
+              latitude: addressLatitude,
+              longitude: addressLongitude,
+            },
+            radius: 35000.0,
+          },
+        },
+      }),
+    };
+
+    await fetch(placesEndpoint, searchRequest)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        returnedPlaceId = data.places[0].id;
+        returnedPlaceName = data.places[0].displayName.text;
+        setReturnedAddress(data.places[0].formattedAddress);
+      })
+      .catch((error) => {
+        window.alert(error.message);
+      });
+
+    return {
+      placeId: returnedPlaceId,
+      placeName: returnedPlaceName,
+    };
+  }
+
   return (
     <div className="grid grid-cols-[65%,35%]">
       <div
@@ -88,16 +139,6 @@ function App() {
         >
           Hunger
         </div>
-        {/* <p className="pt-8 pb-2 text-center">
-        Your formatted address: {returnedFormattedAddress}
-      </p>
-      <p className="p-0 text-center">Your latitude: {mapViewState?.latitude}</p>
-      <p className="p-0 text-center">
-        Your longitude: {mapViewState?.longitude}
-      </p> */}
-        {/* <label className="" htmlFor="address">
-          5-digit ZIP Code or address
-        </label> */}
         <input
           className="rounded-[2.5rem] w-2/3 text-center text-6xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
           type="text"
@@ -121,46 +162,23 @@ function App() {
         >
           submit
         </button>
-
-        {/* <input
-          className="btn-primary w-1/4 h-5 border self-center"
-          type="button"
-          name=""
-          value={showMap ? "Hide Map" : "Show Map"}
-          id="testMap"
-          onClick={(HTMLButtonElement) => {
-            HTMLButtonElement.nativeEvent.preventDefault;
-            if (showMap) {
-              setShowMap(false);
-            } else setShowMap(true);
-          }}
-        /> */}
       </div>
       <div className="grid grid-cols-1 grid-rows-1 place-items-center w-full h-[100dvh] border-dashed border-l border-[#1E1E1F]">
-        {showMap ? (
-          <Map
-            {...mapViewState}
-            id="map"
-            reuseMaps
-            zoom={15}
-            mapboxAccessToken={apiKey}
-            style={{
-              width: "70%",
-              height: "50%",
-              margin: "auto",
-              borderWidth: "1px",
-              borderColor: "#1E1E1F",
-              borderRadius: "2rem",
-            }}
-            mapStyle="mapbox://styles/mapbox/streets-v9"
-          >
-            <Marker {...markerViewState}>
-              <img
-                style={{ width: "4rem", height: "4rem" }}
-                src="/src/assets/pin.png"
-              />
-            </Marker>
-          </Map>
+        {mapVisible ? (
+          <>
+            <iframe
+              width="70%"
+              height="50%"
+              style={{ border: "1px" }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src={`https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}
+              &q=place_id:${placeID}`}
+            ></iframe>
+            <p>Your recommended eatery is {placeName}.</p>
+            <p>Address: {returnedFormattedAddress}</p>
+          </>
         ) : null}
       </div>
     </div>
