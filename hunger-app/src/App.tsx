@@ -1,15 +1,15 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 function App() {
+  const mapboxApiKey = import.meta.env.VITE_MAPBOX_KEY;
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
   const [inputAddress, setInputAddress] = useState("");
   const [returnedFormattedAddress, setReturnedAddress] = useState("");
   const [mapVisible, setMapVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [placeID, setPlaceID] = useState<string | null>(null);
   const [placeName, setPlaceName] = useState<string | null>(null);
-
-  const mapboxApiKey = import.meta.env.VITE_MAPBOX_KEY;
-  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+  let placeSearchResponse: Response | null;
 
   type Place = {
     latitude?: number;
@@ -23,15 +23,15 @@ function App() {
     if (placeID !== null) setMapVisible(true);
   }, [placeID]);
 
-  async function updateUiState(viewStateOptions: Promise<Place>) {
-    let restaurantPlaceId: string | undefined = "";
-    let restaurantPlaceName: string | undefined = "";
-    await viewStateOptions.then((data) => {
-      restaurantPlaceId = data.placeId;
-      restaurantPlaceName = data.placeName;
+  async function updateUiState() {
+    console.log(placeSearchResponse);
+    placeSearchResponse?.json().then((data) => {
+      const placeItem = Math.floor(Math.random() * data.places.length);
+      console.log(data);
+      setPlaceID(data.places[placeItem].id);
+      setPlaceName(data.places[placeItem].displayName.text);
+      setReturnedAddress(data.places[placeItem].formattedAddress);
     });
-    setPlaceID(restaurantPlaceId);
-    setPlaceName(restaurantPlaceName);
   }
 
   //updates submittedAddress useState as user is typing
@@ -39,9 +39,10 @@ function App() {
     setInputAddress(event.currentTarget.value);
   }
   //checks to see if input is empty and skips submission if so
-  function handleSubmissionValidation() {
+  async function handleSubmissionValidation() {
     if (inputRef.current?.value !== "") {
-      updateUiState(searchPlaceEndpoint());
+      placeSearchResponse = await searchPlaceEndpoint();
+      updateUiState();
     } else {
       window.alert("Please enter a ZIP code or address");
     }
@@ -73,13 +74,11 @@ function App() {
     };
   }
 
-  //used to query placeS
-  async function searchPlaceEndpoint(): Promise<Place> {
+  //used to query places api, returns response
+  async function searchPlaceEndpoint() {
     const addressCenter: Promise<Place> = handleAddressSubmission();
     let addressLatitude: number | undefined = 0;
     let addressLongitude: number | undefined = 0;
-    let returnedPlaceId = "";
-    let returnedPlaceName = "";
     await addressCenter.then((data) => {
       addressLatitude = data.latitude;
       addressLongitude = data.longitude;
@@ -110,23 +109,12 @@ function App() {
       }),
     };
 
-    await fetch(placesEndpoint, searchRequest)
-      .then((response) => response.json())
-      .then((data) => {
-        const placeItem = Math.floor(Math.random() * data.places.length);
-        console.log(data);
-        returnedPlaceId = data.places[placeItem].id;
-        returnedPlaceName = data.places[placeItem].displayName.text;
-        setReturnedAddress(data.places[placeItem].formattedAddress);
-      })
-      .catch((error) => {
-        window.alert(error.message);
-      });
-
-    return {
-      placeId: returnedPlaceId,
-      placeName: returnedPlaceName,
-    };
+    const returnedResponse = await fetch(placesEndpoint, searchRequest).then(
+      (response) => {
+        return response;
+      }
+    );
+    return returnedResponse;
   }
 
   return (
