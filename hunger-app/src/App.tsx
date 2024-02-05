@@ -10,28 +10,65 @@ function App() {
   const [placeID, setPlaceID] = useState<string | null>(null);
   const [placeName, setPlaceName] = useState<string | null>(null);
   let placeSearchResponse: Response | null;
+  let randomNumberList: number[] = [];
+  let placeList: Place[] = [];
+  const [storedPlaceList, setStoredPlaceList] = useState<Place[]>([]);
+  let tabNumber = 0;
 
   type Place = {
     latitude?: number;
     longitude?: number;
-    placeId?: string;
-    placeName?: string;
+    placeId: string;
+    placeName: string;
     rating?: number;
+    formattedAddress: string;
   };
 
   useEffect(() => {
     if (placeID !== null) setMapVisible(true);
   }, [placeID]);
 
+  function generateRandomNumberList() {
+    while (randomNumberList.length < 20) {
+      var r = Math.floor(Math.random() * 20);
+      if (randomNumberList.indexOf(r) === -1) randomNumberList.push(r);
+    }
+  }
+
+  function changeTabNumber(newNumber: number) {
+    tabNumber = newNumber;
+    console.log(tabNumber);
+  }
+
   async function updateUiState() {
     console.log(placeSearchResponse);
-    placeSearchResponse?.json().then((data) => {
-      const placeItem = Math.floor(Math.random() * data.places.length);
+    await placeSearchResponse?.json().then((data) => {
+      //const placeItem = Math.floor(Math.random() * data.places.length);
       console.log(data);
-      setPlaceID(data.places[placeItem].id);
-      setPlaceName(data.places[placeItem].displayName.text);
-      setReturnedAddress(data.places[placeItem].formattedAddress);
+      for (let i = 0; i < 5; i++) {
+        placeList.push({
+          placeId: data.places[randomNumberList[i]].id,
+          placeName: data.places[randomNumberList[i]].displayName.text,
+          formattedAddress: data.places[randomNumberList[i]].formattedAddress,
+        });
+      }
     });
+    setPlaceID(placeList[tabNumber].placeId);
+    setPlaceName(placeList[tabNumber].placeName);
+    setReturnedAddress(placeList[tabNumber].formattedAddress);
+
+    setStoredPlaceList(placeList);
+  }
+
+  function changeLocation() {
+    setPlaceID(storedPlaceList[tabNumber].placeId);
+    setPlaceName(storedPlaceList[tabNumber].placeName);
+    setReturnedAddress(storedPlaceList[tabNumber].formattedAddress);
+  }
+
+  function handleTabClick(tabNumber: number) {
+    changeTabNumber(tabNumber);
+    changeLocation();
   }
 
   //updates submittedAddress useState as user is typing
@@ -42,6 +79,7 @@ function App() {
   async function handleSubmissionValidation() {
     if (inputRef.current?.value !== "") {
       placeSearchResponse = await searchPlaceEndpoint();
+      generateRandomNumberList();
       updateUiState();
     } else {
       window.alert("Please enter a ZIP code or address");
@@ -71,6 +109,9 @@ function App() {
     return {
       latitude: returnedLatitude,
       longitude: returnedLongitude,
+      placeId: "",
+      placeName: "",
+      formattedAddress: "",
     };
   }
 
@@ -155,7 +196,44 @@ function App() {
       </div>
       <div className="grid grid-cols-1 grid-rows-1 w-full h-[100dvh] border-dashed border-l border-[#1E1E1F]">
         {mapVisible ? (
-          <div className="grid grid-rows-[70%,30%] h-full w-full place-items-center">
+          <div className="grid grid-rows-[10%,60%,30%] h-full w-full place-items-center">
+            <div className="flex gap-x-10 place-items-center">
+              <button
+                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
+                type="button"
+                onClick={() => handleTabClick(0)}
+              >
+                1
+              </button>
+              <button
+                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
+                type="button"
+                onClick={() => handleTabClick(1)}
+              >
+                2
+              </button>
+              <button
+                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
+                type="button"
+                onClick={() => handleTabClick(2)}
+              >
+                3
+              </button>
+              <button
+                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
+                type="button"
+                onClick={() => handleTabClick(3)}
+              >
+                4
+              </button>
+              <button
+                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
+                type="button"
+                onClick={() => handleTabClick(4)}
+              >
+                5
+              </button>
+            </div>
             <iframe
               className="mt-auto w-[70%] h-[80%] rounded-xl border-2 border-[#1E1E1F] row-span"
               id="map-embed"
