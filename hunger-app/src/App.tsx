@@ -9,7 +9,6 @@ function App() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [placeID, setPlaceID] = useState<string | null>(null);
   const [placeName, setPlaceName] = useState<string | null>(null);
-  let placeSearchResponse: Response | null;
 
   type Place = {
     latitude?: number;
@@ -23,7 +22,8 @@ function App() {
     if (placeID !== null) setMapVisible(true);
   }, [placeID]);
 
-  async function updateUiState() {
+  //takes response and sets appropriate useState
+  async function updateUiState(placeSearchResponse: Response | void) {
     console.log(placeSearchResponse);
     placeSearchResponse?.json().then((data) => {
       const placeItem = Math.floor(Math.random() * data.places.length);
@@ -41,8 +41,8 @@ function App() {
   //checks to see if input is empty and skips submission if so
   async function handleSubmissionValidation() {
     if (inputRef.current?.value !== "") {
-      placeSearchResponse = await searchPlaceEndpoint();
-      updateUiState();
+      const placeSearchResponse = await searchPlaceEndpoint();
+      updateUiState(placeSearchResponse);
     } else {
       window.alert("Please enter a ZIP code or address");
     }
@@ -76,13 +76,7 @@ function App() {
 
   //used to query places api, returns response
   async function searchPlaceEndpoint() {
-    const addressCenter: Promise<Place> = handleAddressSubmission();
-    let addressLatitude: number | undefined = 0;
-    let addressLongitude: number | undefined = 0;
-    await addressCenter.then((data) => {
-      addressLatitude = data.latitude;
-      addressLongitude = data.longitude;
-    });
+    const addressCenter: Place = await handleAddressSubmission();
     const placesEndpoint = `https://places.googleapis.com/v1/places:searchNearby`;
     const searchRequest: RequestInit = {
       method: "POST",
@@ -100,8 +94,8 @@ function App() {
         locationRestriction: {
           circle: {
             center: {
-              latitude: addressLatitude,
-              longitude: addressLongitude,
+              latitude: addressCenter.latitude,
+              longitude: addressCenter.longitude,
             },
             radius: 35000.0,
           },
@@ -109,12 +103,13 @@ function App() {
       }),
     };
 
-    const returnedResponse = await fetch(placesEndpoint, searchRequest).then(
-      (response) => {
+    return await fetch(placesEndpoint, searchRequest)
+      .then((response) => {
         return response;
-      }
-    );
-    return returnedResponse;
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   return (
@@ -153,7 +148,7 @@ function App() {
           submit
         </button>
       </div>
-      <div className="grid grid-cols-1 grid-rows-1 w-full h-[100dvh] border-dashed border-l border-[#1E1E1F]">
+      <div className="grid grid-cols-1 grid-rows-1 w-full h-[100dvh] border-dashed border-l-2 border-[#1E1E1F]">
         {mapVisible ? (
           <div className="grid grid-rows-[70%,30%] h-full w-full place-items-center">
             <iframe
@@ -166,10 +161,12 @@ function App() {
               &q=place_id:${placeID}`}
             />
             <div className="pt-10 mb-auto">
-              <div className="font-cousine text-center text-4xl">
+              <div className="font-cousine text-center text-[#1E1E1F] text-4xl">
                 {placeName}
               </div>
-              <div className="font-cousine">{returnedFormattedAddress}</div>
+              <div className="font-cousine text-[#1E1E1F]">
+                {returnedFormattedAddress}
+              </div>
             </div>
           </div>
         ) : null}
