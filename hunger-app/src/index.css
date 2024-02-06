@@ -17,21 +17,27 @@
     font-size: 1.5rem;
     outline: none;
   }
-
-  input:focus {
+  .lastClicked {
+    background: white;
+  }
+  #submitButton:focus {
     outline: none;
   }
-  button {
+  #submitButton {
     box-shadow: -0.5rem 0.5rem 0 0 #1e1e1f;
     letter-spacing: 0.25rem;
   }
 
-  button:hover {
+  #submitButton:hover {
     background: rgba(30, 30, 31, 0.3);
     color: #302d29;
   }
 
-  button:active {
+  .tabButton:active {
+    background: red;
+  }
+
+  #submitButton:active {
     transform: translate(-0.5rem, 0.5rem);
     border-style: none;
     background: rgba(30, 30, 31, 0.9);
