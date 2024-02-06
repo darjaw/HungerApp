@@ -4,102 +4,53 @@ function App() {
   const mapboxApiKey = import.meta.env.VITE_MAPBOX_KEY;
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
   const [inputAddress, setInputAddress] = useState("");
-  const [returnedFormattedAddress, setReturnedAddress] = useState("");
   const [mapVisible, setMapVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [placeID, setPlaceID] = useState<string | null>(null);
-  const [placeName, setPlaceName] = useState<string | null>(null);
-  let placeSearchResponse: Response | null;
-  let randomNumberList: number[] = [];
-  let placeList: Place[] = [];
-  const [storedPlaceList, setStoredPlaceList] = useState<Place[]>([]);
-  let tabNumber = 0;
+  const [placeList, setPlaceList] = useState<Place[]>([]);
+  const [currentPlace, setCurrentPlace] = useState<Place | null>(null);
+
+  //needs to become state
+  let tabNumber: number = 0;
 
   type Place = {
     latitude?: number;
     longitude?: number;
-    placeId: string;
-    placeName: string;
+    id: string;
+    name: string;
     rating?: number;
     formattedAddress: string;
   };
 
   useEffect(() => {
-    if (placeID !== null) setMapVisible(true);
-  }, [placeID]);
-
-  function generateRandomNumberList() {
-    while (randomNumberList.length < 20) {
-      var r = Math.floor(Math.random() * 20);
-      if (randomNumberList.indexOf(r) === -1) randomNumberList.push(r);
+    if (currentPlace !== null) {
+      setMapVisible(true);
     }
-  }
-
-  function changeTabNumber(newNumber: number) {
-    tabNumber = newNumber;
-    console.log(tabNumber);
-  }
-
-  async function updateUiState() {
-    console.log(placeSearchResponse);
-    await placeSearchResponse?.json().then((data) => {
-      //const placeItem = Math.floor(Math.random() * data.places.length);
-      console.log(data);
-      for (let i = 0; i < 5; i++) {
-        placeList.push({
-          placeId: data.places[randomNumberList[i]].id,
-          placeName: data.places[randomNumberList[i]].displayName.text,
-          formattedAddress: data.places[randomNumberList[i]].formattedAddress,
-        });
-      }
-    });
-    setPlaceID(placeList[tabNumber].placeId);
-    setPlaceName(placeList[tabNumber].placeName);
-    setReturnedAddress(placeList[tabNumber].formattedAddress);
-
-    setStoredPlaceList(placeList);
-  }
-
-  function changeLocation() {
-    setPlaceID(storedPlaceList[tabNumber].placeId);
-    setPlaceName(storedPlaceList[tabNumber].placeName);
-    setReturnedAddress(storedPlaceList[tabNumber].formattedAddress);
-  }
-
-  function handleTabClick(tabNumber: number) {
-    changeTabNumber(tabNumber);
-    changeLocation();
-  }
+  }, [currentPlace]);
 
   //updates submittedAddress useState as user is typing
   function handleInputUpdate(event: ChangeEvent<HTMLInputElement>) {
     setInputAddress(event.currentTarget.value);
   }
+
   //checks to see if input is empty and skips submission if so
   async function handleSubmissionValidation() {
-    if (inputRef.current?.value !== "") {
-      placeSearchResponse = await searchPlaceEndpoint();
-      generateRandomNumberList();
-      updateUiState();
+    if (inputRef.current?.value.trim() !== "") {
+      setPlaceList(await getPlaceList());
     } else {
       window.alert("Please enter a ZIP code or address");
     }
   }
-
   //used on address submission, sends current state of input onSubmit to mapbox address validation API
   async function handleAddressSubmission(): Promise<Place> {
     const submittedAddress = inputRef.current?.value;
     let returnedLatitude = 0;
     let returnedLongitude = 0;
-
     setInputAddress("");
     const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${mapboxApiKey}`;
 
     await fetch(mapBoxEndpoint)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
-        setReturnedAddress(data.features[0].place_name);
         returnedLatitude = data.features[0].center[1];
         returnedLongitude = data.features[0].center[0];
       })
@@ -109,21 +60,54 @@ function App() {
     return {
       latitude: returnedLatitude,
       longitude: returnedLongitude,
-      placeId: "",
-      placeName: "",
+      id: "",
+      name: "",
       formattedAddress: "",
     };
   }
 
-  //used to query places api, returns response
-  async function searchPlaceEndpoint() {
-    const addressCenter: Promise<Place> = handleAddressSubmission();
-    let addressLatitude: number | undefined = 0;
-    let addressLongitude: number | undefined = 0;
-    await addressCenter.then((data) => {
-      addressLatitude = data.latitude;
-      addressLongitude = data.longitude;
+  async function getPlaceList(): Promise<Place[]> {
+    const placeSearchResponse: Response = await searchPlaceEndpoint();
+    const randomNumberList: number[] = [];
+    const placeList: Place[] = [];
+    // array of 5 random numbers
+    while (randomNumberList.length < 20) {
+      const randomNumber = Math.floor(Math.random() * 20);
+      if (randomNumberList.indexOf(randomNumber) === -1)
+        randomNumberList.push(randomNumber);
+    }
+
+    placeSearchResponse.json().then((data) => {
+      for (let i = 0; i < 5; i++) {
+        placeList.push({
+          id: data.places[randomNumberList[i]].id,
+          name: data.places[randomNumberList[i]].displayName.text,
+          formattedAddress: data.places[randomNumberList[i]].formattedAddress,
+        });
+      }
+      setCurrentPlace(placeList[tabNumber]);
     });
+    console.log(placeList);
+    return placeList;
+  }
+
+  function updateUiState() {
+    setCurrentPlace(placeList[tabNumber]);
+  }
+
+  function handleTabClick(tabNumber: number) {
+    changeTabNumber(tabNumber);
+    updateUiState();
+  }
+
+  function changeTabNumber(newNumber: number) {
+    tabNumber = newNumber;
+    console.log(tabNumber);
+  }
+
+  //used to query places api, returns response
+  async function searchPlaceEndpoint(): Promise<Response> {
+    const addressCenter = await handleAddressSubmission();
     const placesEndpoint = `https://places.googleapis.com/v1/places:searchNearby`;
     const searchRequest: RequestInit = {
       method: "POST",
@@ -141,8 +125,8 @@ function App() {
         locationRestriction: {
           circle: {
             center: {
-              latitude: addressLatitude,
-              longitude: addressLongitude,
+              latitude: addressCenter.latitude,
+              longitude: addressCenter.longitude,
             },
             radius: 35000.0,
           },
@@ -150,12 +134,9 @@ function App() {
       }),
     };
 
-    const returnedResponse = await fetch(placesEndpoint, searchRequest).then(
-      (response) => {
-        return response;
-      }
-    );
-    return returnedResponse;
+    return await fetch(placesEndpoint, searchRequest).then((response) => {
+      return response;
+    });
   }
 
   return (
@@ -194,7 +175,7 @@ function App() {
           submit
         </button>
       </div>
-      <div className="grid grid-cols-1 grid-rows-1 w-full h-[100dvh] border-dashed border-l border-[#1E1E1F]">
+      <div className="grid grid-cols-1 grid-rows-1 w-full h-[100dvh] border-dashed border-l-2 border-[#1E1E1F]">
         {mapVisible ? (
           <div className="grid grid-rows-[10%,60%,30%] h-full w-full place-items-center">
             <div className="flex gap-x-10 place-items-center">
@@ -241,13 +222,15 @@ function App() {
               allowFullScreen
               referrerPolicy="no-referrer-when-downgrade"
               src={`https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}
-              &q=place_id:${placeID}`}
+              &q=place_id:${currentPlace?.id}`}
             />
             <div className="pt-10 mb-auto">
-              <div className="font-cousine text-center text-4xl">
-                {placeName}
+              <div className="font-cousine text-center text-4xl text-[#1E1E1F]">
+                {currentPlace?.name}
               </div>
-              <div className="font-cousine">{returnedFormattedAddress}</div>
+              <div className="font-cousine text-[#1E1E1F]">
+                {currentPlace?.formattedAddress}
+              </div>
             </div>
           </div>
         ) : null}
