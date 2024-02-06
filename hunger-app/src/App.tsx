@@ -8,24 +8,19 @@ function App() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [placeList, setPlaceList] = useState<Place[]>([]);
   const [currentPlace, setCurrentPlace] = useState<Place | null>(null);
-
-  //needs to become state
-  let tabNumber: number = 0;
-
+  const [currentTabNumber, setCurrentTabNumber] = useState<number>(NaN);
   type Place = {
-    latitude?: number;
-    longitude?: number;
     id: string;
     name: string;
-    rating?: number;
     formattedAddress: string;
+    latitude?: number;
+    longitude?: number;
+    rating?: number;
   };
 
   useEffect(() => {
-    if (currentPlace !== null) {
-      setMapVisible(true);
-    }
-  }, [currentPlace]);
+    setCurrentPlace(placeList[currentTabNumber]);
+  }, [currentTabNumber, placeList]);
 
   //updates submittedAddress useState as user is typing
   function handleInputUpdate(event: ChangeEvent<HTMLInputElement>) {
@@ -85,24 +80,13 @@ function App() {
           formattedAddress: data.places[randomNumberList[i]].formattedAddress,
         });
       }
-      setCurrentPlace(placeList[tabNumber]);
+      setCurrentTabNumber(0);
+      if (mapVisible == false) {
+        setMapVisible(true);
+      }
     });
     console.log(placeList);
     return placeList;
-  }
-
-  function updateUiState() {
-    setCurrentPlace(placeList[tabNumber]);
-  }
-
-  function handleTabClick(tabNumber: number) {
-    changeTabNumber(tabNumber);
-    updateUiState();
-  }
-
-  function changeTabNumber(newNumber: number) {
-    tabNumber = newNumber;
-    console.log(tabNumber);
   }
 
   //used to query places api, returns response
@@ -177,43 +161,20 @@ function App() {
       </div>
       <div className="grid grid-cols-1 grid-rows-1 w-full h-[100dvh] border-dashed border-l-2 border-[#1E1E1F]">
         {mapVisible ? (
-          <div className="grid grid-rows-[10%,60%,30%] h-full w-full place-items-center">
-            <div className="flex gap-x-10 place-items-center">
-              <button
-                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
-                type="button"
-                onClick={() => handleTabClick(0)}
-              >
-                1
-              </button>
-              <button
-                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
-                type="button"
-                onClick={() => handleTabClick(1)}
-              >
-                2
-              </button>
-              <button
-                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
-                type="button"
-                onClick={() => handleTabClick(2)}
-              >
-                3
-              </button>
-              <button
-                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
-                type="button"
-                onClick={() => handleTabClick(3)}
-              >
-                4
-              </button>
-              <button
-                className="rounded-[2.5rem] w-1/3 text-center text-6xl border-[#1E1E1F] text-[#1E1E1F]"
-                type="button"
-                onClick={() => handleTabClick(4)}
-              >
-                5
-              </button>
+          <div className="grid grid-rows-[10%,60%,0%] h-full w-full place-items-center">
+            <div className="mt-48 flex gap-x-6 place-items-center">
+              {placeList.map((place) => (
+                <>
+                  <button
+                    className={`tabButton mt-auto h-5 w-6 bg-[#1E1E1F] rounded-full`}
+                    type="button"
+                    value={placeList.indexOf(place)}
+                    onClick={(event) => {
+                      setCurrentTabNumber(Number(event.currentTarget.value));
+                    }}
+                  ></button>
+                </>
+              ))}
             </div>
             <iframe
               className="mt-auto w-[70%] h-[80%] rounded-xl border-2 border-[#1E1E1F] row-span"
