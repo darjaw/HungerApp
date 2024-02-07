@@ -34,7 +34,7 @@
   }
 
   .tabButton:active {
-    background: red;
+    background: rgba(30, 30, 31, 0.5);
   }
 
   #submitButton:active {
