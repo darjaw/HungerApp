@@ -3,9 +3,9 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 function App() {
   const mapboxApiKey = import.meta.env.VITE_MAPBOX_KEY;
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [inputAddress, setInputAddress] = useState("");
   const [mapVisible, setMapVisible] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const [placeList, setPlaceList] = useState<Place[]>([]);
   const [currentPlace, setCurrentPlace] = useState<Place | null>(null);
   const [currentTabNumber, setCurrentTabNumber] = useState<number>(NaN);
@@ -35,6 +35,7 @@ function App() {
       window.alert("Please enter a ZIP code or address");
     }
   }
+
   //used on address submission, sends current state of input onSubmit to mapbox address validation API
   async function handleAddressSubmission(): Promise<Place> {
     const submittedAddress = inputRef.current?.value;
@@ -161,13 +162,16 @@ function App() {
       </div>
       <div className="grid grid-cols-1 grid-rows-1 w-full h-[100dvh] border-dashed border-l-2 border-[#1E1E1F]">
         {mapVisible ? (
-          <div className="grid grid-rows-[10%,60%,0%] h-full w-full place-items-center">
+          <div className="grid grid-rows-[10%,60%,30%] h-full w-full place-items-center">
             <div className="mt-48 flex gap-x-6 place-items-center">
-              {placeList.map((place) => (
+              {placeList.map((place, index) => (
                 <>
                   <button
-                    className={`tabButton mt-auto h-5 w-6 bg-[#1E1E1F] rounded-full`}
+                    className={`tabButton mt-8 h-6 w-8 bg-[#1E1E1F] duration-[350ms] ease-in rounded-full ${
+                      currentTabNumber === index ? "bg-[#ffefd7]" : null
+                    }`}
                     type="button"
+                    id={`${index}`}
                     value={placeList.indexOf(place)}
                     onClick={(event) => {
                       setCurrentTabNumber(Number(event.currentTarget.value));
@@ -186,10 +190,10 @@ function App() {
               &q=place_id:${currentPlace?.id}`}
             />
             <div className="pt-10 mb-auto">
-              <div className="font-cousine text-center text-4xl text-[#1E1E1F]">
+              <div className="font-cousine text-center text-4xl text-[#1E1E1F] whitespace-break-spaces">
                 {currentPlace?.name}
               </div>
-              <div className="font-cousine text-[#1E1E1F]">
+              <div className="font-cousine text-[#1E1E1F] text-center">
                 {currentPlace?.formattedAddress}
               </div>
             </div>
