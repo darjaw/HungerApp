@@ -49,8 +49,6 @@ function App() {
       .then((data) => {
         returnedLatitude = data.features[0].center[1];
         returnedLongitude = data.features[0].center[0];
-        console.log(data.features[0].center[0]);
-        console.log(data.features[0].center[1]);
       })
       .catch((error) => {
         console.log("error!");
