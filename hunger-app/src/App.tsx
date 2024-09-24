@@ -42,7 +42,7 @@ function App() {
     let returnedLatitude = 0;
     let returnedLongitude = 0;
     setInputAddress("");
-    const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${mapboxApiKey}`;
+    const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=none&access_token=${mapboxApiKey}`;
 
     await fetch(mapBoxEndpoint)
       .then((response) => response.json())
@@ -52,7 +52,12 @@ function App() {
       })
       .catch((error) => {
         console.log("error!");
-        window.alert(error.message);
+        if (
+          error.message ===
+          "can't access property 0, data.features is undefined"
+        ) {
+          window.alert("Unable to find location. Check address or ZIP input.");
+        } else window.alert("Error: " + error.message);
       });
     if (returnedLatitude != 0 && returnedLongitude != 0) {
       return {
