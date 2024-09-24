@@ -4,8 +4,8 @@ function App() {
   const mapboxApiKey = import.meta.env.VITE_MAPBOX_KEY;
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [inputAddress, setInputAddress] = useState("");
-  const [mapVisible, setMapVisible] = useState(false);
+  const [inputAddress, setInputAddress] = useState<string>("");
+  const [mapVisible, setMapVisible] = useState<boolean>(false);
   const [placeList, setPlaceList] = useState<Place[]>([]);
   const [currentPlace, setCurrentPlace] = useState<Place | null>(null);
   const [currentTabNumber, setCurrentTabNumber] = useState<number>(NaN);
@@ -49,17 +49,29 @@ function App() {
       .then((data) => {
         returnedLatitude = data.features[0].center[1];
         returnedLongitude = data.features[0].center[0];
+        console.log(data.features[0].center[0]);
+        console.log(data.features[0].center[1]);
       })
       .catch((error) => {
+        console.log("error!");
         window.alert(error.message);
       });
-    return {
-      latitude: returnedLatitude,
-      longitude: returnedLongitude,
-      id: "",
-      name: "",
-      formattedAddress: "",
-    };
+    if (returnedLatitude != 0 && returnedLongitude != 0) {
+      return {
+        latitude: returnedLatitude,
+        longitude: returnedLongitude,
+        id: "",
+        name: "",
+        formattedAddress: "",
+      };
+    } else
+      return {
+        latitude: undefined,
+        longitude: undefined,
+        id: "",
+        name: "",
+        formattedAddress: "",
+      };
   }
 
   async function getPlaceList(): Promise<Place[]> {
@@ -90,7 +102,7 @@ function App() {
     return placeList;
   }
 
-  //used to query places api, returns response
+  //used to query Google places api, returns response
   async function searchPlaceEndpoint(): Promise<Response> {
     const addressCenter = await handleAddressSubmission();
     const placesEndpoint = `https://places.googleapis.com/v1/places:searchNearby`;
@@ -118,10 +130,11 @@ function App() {
         },
       }),
     };
-
-    return await fetch(placesEndpoint, searchRequest).then((response) => {
-      return response;
-    });
+    if (addressCenter.latitude !== undefined) {
+      return await fetch(placesEndpoint, searchRequest).then((response) => {
+        return response;
+      });
+    } else return Promise.reject(new Error("invalid location"));
   }
 
   return (
@@ -174,7 +187,7 @@ function App() {
                     id={`${index}`}
                     value={placeList.indexOf(place)}
                     onClick={(event) => {
-                      setCurrentTabNumber(Number(event.currentTarget.value));
+                      setCurrentTabNumber(parseInt(event.currentTarget.value));
                     }}
                   ></button>
                 </>
