@@ -110,7 +110,7 @@ function App() {
 
   //used to query Google places api, returns response
   async function searchPlaceEndpoint(): Promise<Response> {
-    const addressCenter = await handleAddressSubmission();
+    const addressCenter: Place = await handleAddressSubmission();
     const placesEndpoint = `https://places.googleapis.com/v1/places:searchNearby`;
     const searchRequest: RequestInit = {
       method: "POST",
@@ -136,7 +136,10 @@ function App() {
         },
       }),
     };
-    if (addressCenter.latitude !== undefined) {
+    if (
+      addressCenter.latitude !== undefined ||
+      addressCenter.longitude !== undefined
+    ) {
       return await fetch(placesEndpoint, searchRequest).then((response) => {
         return response;
       });
