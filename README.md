@@ -1,7 +1,7 @@
 # Hunger
 Hunger is a React & Typescript web app built to provide restaurant suggestions based on user-provided ZIP codes, full addresses, or "City, State" formatted submissions.
 
-Our goal is create a relatively intuitve, responsive, and simple page that provides information about each restaurant, including name, address, and ratings.
+Our goal is create a relatively intuitive, responsive, and simple page that provides information about each restaurant, including name, address, and ratings.
 We utilize Google's Map Places API as it provides the most meaningful information and allows us to easily provide users with an embed Google map for outside navigation.
 
 # Screenshot
