@@ -80,10 +80,8 @@ function App() {
       };
   }
 
-  async function getPlaceList(fromClientLocation: boolean): Promise<Place[]> {
-    const placeSearchResponse: Response = await searchPlaceEndpoint(
-      fromClientLocation
-    );
+  async function getPlaceList(): Promise<Place[]> {
+    const placeSearchResponse: Response = await searchPlaceEndpoint();
     const randomNumberList: number[] = [];
     const placeList: Place[] = [];
     // array of 5 random numbers
@@ -111,19 +109,8 @@ function App() {
   }
 
   //used to query Google places api, returns response
-  async function searchPlaceEndpoint(
-    fromClientLocation: boolean
-  ): Promise<Response> {
-    let addressCenter: Place;
-    if (!fromClientLocation) {
-      addressCenter = await handleAddressSubmission();
-    } else {
-      const successCallBack = (position: GeolocationCoordinates) => {
-        addressCenter.latitude = position.latitude;
-        addressCenter.longitude = position.latitude;
-      };
-      navigator.geolocation.getCurrentPosition(successCallBack);
-    }
+  async function searchPlaceEndpoint(): Promise<Response> {
+    const addressCenter: Place = await handleAddressSubmission();
     const placesEndpoint = `https://places.googleapis.com/v1/places:searchNearby`;
     const searchRequest: RequestInit = {
       method: "POST",
@@ -159,10 +146,6 @@ function App() {
     } else return Promise.reject(new Error("invalid location"));
   }
 
-  async function getClientLocation() {
-    setPlaceList(await getPlaceList(true));
-  }
-
   return (
     <div className="grid grid-cols-[60%,40%]">
       <div
@@ -175,28 +158,21 @@ function App() {
         >
           Hunger
         </div>
-        <div className="flex">
-          <input
-            className="rounded-[2.5rem] w-2/3 text-center text-5xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
-            type="text"
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                handleSubmissionValidation();
-              }
-            }}
-            id="address"
-            ref={inputRef}
-            value={inputAddress}
-            placeholder="e.g. '21401' or '145 Broadway, Buffalo, NY 14203'"
-            onChange={handleInputUpdate}
-            autoComplete="off"
-          />
-          <button
-            className="border h-40 w-40 rounded-full border-[#1E1E1F] "
-            id="getClientLocation"
-            onClick={getClientLocation}
-          ></button>
-        </div>
+        <input
+          className="rounded-[2.5rem] w-2/3 text-center text-5xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
+          type="text"
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              handleSubmissionValidation();
+            }
+          }}
+          id="address"
+          ref={inputRef}
+          value={inputAddress}
+          placeholder="e.g. '21401' or '145 Broadway, Buffalo, NY 14203'"
+          onChange={handleInputUpdate}
+          autoComplete="off"
+        />
         <button
           className="rounded-[2.5rem] w-1/3 text-center text-6xl font-cousine h-40 border bg-transparent duration-500 ease-out shadow-[-10px,10px,0px,0px] border-[#1E1E1F] text-[#1E1E1F] "
           type="button"
