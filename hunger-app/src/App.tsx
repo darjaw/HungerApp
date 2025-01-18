@@ -30,9 +30,16 @@ function App() {
   //checks to see if input is empty and skips submission if so
   async function handleSubmissionValidation() {
     if (inputRef.current?.value.trim() !== "") {
-      setPlaceList(await getPlaceList());
+      let location_data = "";
+      if (inputRef.current?.value.trim() !== undefined) {
+        location_data = inputRef.current?.value.trim();
+      }
+      // setPlaceList(await getPlaceList());
+      const search_endpoint: URL = new URL("http://127.0.0.1:5000/search");
+      search_endpoint.searchParams.append("location", location_data);
+      fetch(search_endpoint);
     } else {
-      window.alert("Please enter a ZIP code or address");
+      window.alert("Please enter a location");
     }
   }
 
@@ -50,16 +57,16 @@ function App() {
         returnedLongitude = data.features[0].center[0];
       })
       .catch((error) => {
-        console.log("error!");
+        console.log("error!: " + error.message);
         if (
           error.message ===
             `can't access property "center", data.features[0] is undefined` ||
           error.message ===
-            `can't access property "center", data.features[1] is undefined`
+            `can't access property "center", data.features[1] is undefined` ||
+          error.message === "data.features[0] is undefined" ||
+          error.message === "data.features[1] is undefined"
         ) {
-          window.alert(
-            "Unable to find location, retry zip or address submission."
-          );
+          window.alert("Unable to find location, try checking your address.");
         } else window.alert("Error: " + error.message);
       });
     if (returnedLatitude != 0 && returnedLongitude != 0) {
@@ -159,7 +166,7 @@ function App() {
           Hunger
         </div>
         <input
-          className="rounded-[2.5rem] w-2/3 text-center text-5xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
+          className="rounded-[2.5rem] w-2/3 text-center text-xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
           type="text"
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -169,7 +176,7 @@ function App() {
           id="address"
           ref={inputRef}
           value={inputAddress}
-          placeholder="e.g. '21401' or '145 Broadway, Buffalo, NY 14203'"
+          placeholder="ZIP or 'City, State' or full Address"
           onChange={handleInputUpdate}
           autoComplete="off"
         />
