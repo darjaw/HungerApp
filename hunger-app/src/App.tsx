@@ -166,7 +166,7 @@ function App() {
           Hunger
         </div>
         <input
-          className="rounded-[2.5rem] w-2/3 text-center text-xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
+          className="rounded-[2.5rem] w-2/3 text-center text-4xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
           type="text"
           onKeyDown={(event) => {
             if (event.key === "Enter") {
