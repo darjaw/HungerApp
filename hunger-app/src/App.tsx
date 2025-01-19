@@ -1,7 +1,6 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 function App() {
-  const mapboxApiKey = import.meta.env.VITE_MAPBOX_KEY;
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [inputAddress, setInputAddress] = useState<string>("");
@@ -34,61 +33,24 @@ function App() {
       if (inputRef.current?.value.trim() !== undefined) {
         location_data = inputRef.current?.value.trim();
       }
-      // setPlaceList(await getPlaceList());
-      const search_endpoint: URL = new URL("http://127.0.0.1:5000/search");
+      const search_endpoint: URL = new URL("http://127.0.0.1:5001/search");
       search_endpoint.searchParams.append("location", location_data);
-      fetch(search_endpoint);
+      fetch(search_endpoint).then(async (data) => {
+        if (data.ok) {
+          setPlaceList(await getPlaceList(data));
+        } else {
+          window.alert(
+            "unhelpful error: probably something to do with the location that was entered"
+          );
+        }
+      });
     } else {
       window.alert("Please enter a location");
     }
   }
 
-  //used on address submission, sends current state of input onSubmit to mapbox address validation API
-  async function handleAddressSubmission(): Promise<Place> {
-    const submittedAddress = inputRef.current?.value;
-    let returnedLatitude = 0;
-    let returnedLongitude = 0;
-    setInputAddress("");
-    const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${mapboxApiKey}`;
-    await fetch(mapBoxEndpoint)
-      .then((response) => response.json())
-      .then((data) => {
-        returnedLatitude = data.features[0].center[1];
-        returnedLongitude = data.features[0].center[0];
-      })
-      .catch((error) => {
-        console.log("error!: " + error.message);
-        if (
-          error.message ===
-            `can't access property "center", data.features[0] is undefined` ||
-          error.message ===
-            `can't access property "center", data.features[1] is undefined` ||
-          error.message === "data.features[0] is undefined" ||
-          error.message === "data.features[1] is undefined"
-        ) {
-          window.alert("Unable to find location, try checking your address.");
-        } else window.alert("Error: " + error.message);
-      });
-    if (returnedLatitude != 0 && returnedLongitude != 0) {
-      return {
-        latitude: returnedLatitude,
-        longitude: returnedLongitude,
-        id: "",
-        name: "",
-        formattedAddress: "",
-      };
-    } else
-      return {
-        latitude: undefined,
-        longitude: undefined,
-        id: "",
-        name: "",
-        formattedAddress: "",
-      };
-  }
-
-  async function getPlaceList(): Promise<Place[]> {
-    const placeSearchResponse: Response = await searchPlaceEndpoint();
+  async function getPlaceList(response: Response): Promise<Place[]> {
+    // const placeSearchResponse: Response = await searchPlaceEndpoint();
     const randomNumberList: number[] = [];
     const placeList: Place[] = [];
     // array of 5 random numbers
@@ -98,7 +60,7 @@ function App() {
         randomNumberList.push(randomNumber);
     }
 
-    placeSearchResponse.json().then((data) => {
+    response.json().then((data) => {
       for (let i = 0; i < 5; i++) {
         placeList.push({
           id: data.places[randomNumberList[i]].id,
@@ -113,44 +75,6 @@ function App() {
     });
     console.log(placeList);
     return placeList;
-  }
-
-  //used to query Google places api, returns response
-  async function searchPlaceEndpoint(): Promise<Response> {
-    const addressCenter: Place = await handleAddressSubmission();
-    const placesEndpoint = `https://places.googleapis.com/v1/places:searchNearby`;
-    const searchRequest: RequestInit = {
-      method: "POST",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": googleMapsApiKey,
-        "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.rating,places.googleMapsUri",
-      },
-      body: JSON.stringify({
-        includedTypes: ["restaurant"],
-        maxResultCount: 20,
-        rankPreference: "DISTANCE",
-        locationRestriction: {
-          circle: {
-            center: {
-              latitude: addressCenter.latitude,
-              longitude: addressCenter.longitude,
-            },
-            radius: 35000.0,
-          },
-        },
-      }),
-    };
-    if (
-      addressCenter.latitude !== undefined ||
-      addressCenter.longitude !== undefined
-    ) {
-      return await fetch(placesEndpoint, searchRequest).then((response) => {
-        return response;
-      });
-    } else return Promise.reject(new Error("invalid location"));
   }
 
   return (
