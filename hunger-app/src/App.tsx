@@ -1,7 +1,6 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 function App() {
-  const mapboxApiKey = import.meta.env.VITE_MAPBOX_KEY;
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [inputAddress, setInputAddress] = useState<string>("");
@@ -30,60 +29,28 @@ function App() {
   //checks to see if input is empty and skips submission if so
   async function handleSubmissionValidation() {
     if (inputRef.current?.value.trim() !== "") {
-      setPlaceList(await getPlaceList());
+      let location_data = "";
+      if (inputRef.current?.value.trim() !== undefined) {
+        location_data = inputRef.current?.value.trim();
+      }
+      const search_endpoint: URL = new URL("http://127.0.0.1:5001/search");
+      search_endpoint.searchParams.append("location", location_data);
+      fetch(search_endpoint).then(async (data) => {
+        if (data.ok) {
+          setPlaceList(await getPlaceList(data));
+        } else {
+          window.alert(
+            "unhelpful error: probably something to do with the location that was entered"
+          );
+        }
+      });
     } else {
-      window.alert("Please enter a ZIP code or address");
+      window.alert("Please enter a location");
     }
   }
 
-  //used on address submission, sends current state of input onSubmit to mapbox address validation API
-  async function handleAddressSubmission(): Promise<Place> {
-    const submittedAddress = inputRef.current?.value;
-    let returnedLatitude = 0;
-    let returnedLongitude = 0;
-    setInputAddress("");
-    const mapBoxEndpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${submittedAddress}.json?country=us&proximity=ip&access_token=${mapboxApiKey}`;
-    await fetch(mapBoxEndpoint)
-      .then((response) => response.json())
-      .then((data) => {
-        returnedLatitude = data.features[0].center[1];
-        returnedLongitude = data.features[0].center[0];
-      })
-      .catch((error) => {
-        console.log("error!");
-        if (
-          error.message ===
-            `can't access property "center", data.features[0] is undefined` ||
-          error.message ===
-            `can't access property "center", data.features[1] is undefined`
-        ) {
-          window.alert(
-            "Unable to find location, retry zip or address submission."
-          );
-        } else window.alert("Error: " + error.message);
-      });
-    if (returnedLatitude != 0 && returnedLongitude != 0) {
-      return {
-        latitude: returnedLatitude,
-        longitude: returnedLongitude,
-        id: "",
-        name: "",
-        formattedAddress: "",
-      };
-    } else
-      return {
-        latitude: undefined,
-        longitude: undefined,
-        id: "",
-        name: "",
-        formattedAddress: "",
-      };
-  }
-
-  async function getPlaceList(fromClientLocation: boolean): Promise<Place[]> {
-    const placeSearchResponse: Response = await searchPlaceEndpoint(
-      fromClientLocation
-    );
+  async function getPlaceList(response: Response): Promise<Place[]> {
+    // const placeSearchResponse: Response = await searchPlaceEndpoint();
     const randomNumberList: number[] = [];
     const placeList: Place[] = [];
     // array of 5 random numbers
@@ -93,7 +60,7 @@ function App() {
         randomNumberList.push(randomNumber);
     }
 
-    placeSearchResponse.json().then((data) => {
+    response.json().then((data) => {
       for (let i = 0; i < 5; i++) {
         placeList.push({
           id: data.places[randomNumberList[i]].id,
@@ -110,59 +77,6 @@ function App() {
     return placeList;
   }
 
-  //used to query Google places api, returns response
-  async function searchPlaceEndpoint(
-    fromClientLocation: boolean
-  ): Promise<Response> {
-    let addressCenter: Place;
-    if (!fromClientLocation) {
-      addressCenter = await handleAddressSubmission();
-    } else {
-      const successCallBack = (position: GeolocationCoordinates) => {
-        addressCenter.latitude = position.latitude;
-        addressCenter.longitude = position.latitude;
-      };
-      navigator.geolocation.getCurrentPosition(successCallBack);
-    }
-    const placesEndpoint = `https://places.googleapis.com/v1/places:searchNearby`;
-    const searchRequest: RequestInit = {
-      method: "POST",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": googleMapsApiKey,
-        "X-Goog-FieldMask":
-          "places.id,places.displayName,places.formattedAddress,places.rating,places.googleMapsUri",
-      },
-      body: JSON.stringify({
-        includedTypes: ["restaurant"],
-        maxResultCount: 20,
-        rankPreference: "DISTANCE",
-        locationRestriction: {
-          circle: {
-            center: {
-              latitude: addressCenter.latitude,
-              longitude: addressCenter.longitude,
-            },
-            radius: 35000.0,
-          },
-        },
-      }),
-    };
-    if (
-      addressCenter.latitude !== undefined ||
-      addressCenter.longitude !== undefined
-    ) {
-      return await fetch(placesEndpoint, searchRequest).then((response) => {
-        return response;
-      });
-    } else return Promise.reject(new Error("invalid location"));
-  }
-
-  async function getClientLocation() {
-    setPlaceList(await getPlaceList(true));
-  }
-
   return (
     <div className="grid grid-cols-[60%,40%]">
       <div
@@ -175,28 +89,21 @@ function App() {
         >
           Hunger
         </div>
-        <div className="flex">
-          <input
-            className="rounded-[2.5rem] w-2/3 text-center text-5xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
-            type="text"
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                handleSubmissionValidation();
-              }
-            }}
-            id="address"
-            ref={inputRef}
-            value={inputAddress}
-            placeholder="e.g. '21401' or '145 Broadway, Buffalo, NY 14203'"
-            onChange={handleInputUpdate}
-            autoComplete="off"
-          />
-          <button
-            className="border h-40 w-40 rounded-full border-[#1E1E1F] "
-            id="getClientLocation"
-            onClick={getClientLocation}
-          ></button>
-        </div>
+        <input
+          className="rounded-[2.5rem] w-2/3 text-center text-4xl font-cousine h-40 border duration-[35ms] ease-linear bg-transparent focus:outline focus:outline-2 border-[#1E1E1F] text-[#1E1E1F] placeholder-[#1E1E1F]"
+          type="text"
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              handleSubmissionValidation();
+            }
+          }}
+          id="address"
+          ref={inputRef}
+          value={inputAddress}
+          placeholder="ZIP or 'City, State' or full Address"
+          onChange={handleInputUpdate}
+          autoComplete="off"
+        />
         <button
           className="rounded-[2.5rem] w-1/3 text-center text-6xl font-cousine h-40 border bg-transparent duration-500 ease-out shadow-[-10px,10px,0px,0px] border-[#1E1E1F] text-[#1E1E1F] "
           type="button"
