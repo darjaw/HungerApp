@@ -26,8 +26,7 @@ function App() {
     setInputAddress(event.currentTarget.value);
   }
 
-  //checks to see if input is empty and skips submission if so
-  async function handleSubmissionValidation() {
+  async function submit() {
     if (inputRef.current?.value.trim() !== "") {
       let location_data = "";
       if (inputRef.current?.value.trim() !== undefined) {
@@ -35,15 +34,25 @@ function App() {
       }
       const search_endpoint: URL = new URL("http://127.0.0.1:5001/search");
       search_endpoint.searchParams.append("location", location_data);
-      fetch(search_endpoint).then(async (data) => {
-        if (data.ok) {
-          setPlaceList(await getPlaceList(data));
-        } else {
-          window.alert(
-            "unhelpful error: probably something to do with the location that was entered"
-          );
-        }
-      });
+      fetch(search_endpoint)
+        .then(async (data) => {
+          if (data.ok) {
+            setPlaceList(await getPlaceList(data));
+          } else {
+            window.alert(
+              "unhelpful error: probably something to do with the location that was entered"
+            );
+          }
+        })
+        .then(() => {
+          setCurrentPlace(placeList[0]);
+          setCurrentTabNumber(0);
+        })
+        .finally(() => {
+          if (mapVisible == false) {
+            setMapVisible(true);
+          }
+        });
     } else {
       window.alert("Please enter a location");
     }
@@ -68,10 +77,6 @@ function App() {
           formattedAddress: data.places[randomNumberList[i]].formattedAddress,
         });
       }
-      setCurrentTabNumber(0);
-      if (mapVisible == false) {
-        setMapVisible(true);
-      }
     });
     console.log(placeList);
     return placeList;
@@ -94,7 +99,7 @@ function App() {
           type="text"
           onKeyDown={(event) => {
             if (event.key === "Enter") {
-              handleSubmissionValidation();
+              submit();
             }
           }}
           id="address"
@@ -108,7 +113,7 @@ function App() {
           className="rounded-[2.5rem] w-1/3 text-center text-6xl font-cousine h-40 border bg-transparent duration-500 ease-out shadow-[-10px,10px,0px,0px] border-[#1E1E1F] text-[#1E1E1F] "
           type="button"
           id="submitButton"
-          onClick={handleSubmissionValidation}
+          onClick={submit}
         >
           submit
         </button>
